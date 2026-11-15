@@ -60,6 +60,7 @@ PORT_FIRST_STAMP = 0x6ae7cb75       # NHL Legacy Native 1.0.0, the one build the
 PORT_LAUNCHER = "Close the NHL Legacy launcher first: the game patch can only be put in or taken out while it is closed."
 PORT_OTHER = ("This version of NHL Legacy Native is not the one the game patch was made for. It plays the game without the patch "
               "until the program has a patch for it.")
+PORT_NEWER = "NHL Legacy Native has a new version, and the game patch in it is for the old one."   # a build we have a file for
 
 
 class PatchError(RuntimeError):

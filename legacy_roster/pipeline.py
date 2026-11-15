@@ -855,6 +855,8 @@ def update(save_folder, source_folder=None, steps=ALL_STEPS, name=None, progress
         targets = [savedata.NATIVE_TITLE]   # the one version the port runs
     if game_patch is None:              # as RPCS3 is
         stale = [t for t in targets if t in patchinstall.stale_titles(rpcs3)]
+        if stale and rpcs3.native and rpcs3.patchable:      # the port was updated to a build the pack has a file for
+            raise L.LayoutError(patchinstall.PORT_NEWER + " Press Patch again in Game patch, then update.")
         if stale and rpcs3.native:
             raise L.LayoutError(patchinstall.PORT_OTHER + " Press Unpatch in Game patch, then update.")
         if stale:

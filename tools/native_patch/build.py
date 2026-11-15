@@ -66,6 +66,16 @@ BUILDS = {
                      ps3_hle_call=0x14519f3e0),
         data=dict(vm_base=0x154d08820, g_vm_ld_gate=0x154e638c0, g_vm_st_gate=0x157186640, g_ww_hi=0x154e6389c,
                   tls_index=0x1598d7f38)),
+    # 1.0.2 (2026-11-14): the same lift again, the thread block where 1.0.1 has it. Found by pair.py from 1.0.1's row:
+    # docs/notes/native-102.md.
+    (0x6af8ae19, 0x1a633000): dict(
+        table=0x142e7720, code_end=0x1a62e4c, tramp_off=0x44b0,
+        helpers=dict(vm_read8=0x140010850, vm_read16=0x144f80480, vm_read32=0x144f41f00, vm_read64=0x144f45d90,
+                     vm_write8=0x1443c0980, vm_write16=0x1443c0850, vm_write32=0x144c067c0, vm_write64=0x144c5ec00,
+                     ppu_ww_note_st16=0x144f7fbe0, ps3_indirect_call=0x1443c0570, ppu_stdcx64=0x1443c01a0,
+                     ps3_hle_call=0x1451a3040),
+        data=dict(vm_base=0x154d0d840, g_vm_ld_gate=0x154e688c0, g_vm_st_gate=0x15718cbb0, g_ww_hi=0x154e6889c,
+                  tls_index=0x1598f6cc8)),
 }
 
 

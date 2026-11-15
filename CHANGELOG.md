@@ -3,6 +3,13 @@
 What changed in each version, for players. Developers: details in [AGENTS.md](AGENTS.md)
 ("Current state") and [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## 0.98.2 (2026-11-15)
+
+**NHL Legacy Native 1.0.2.** The game patch (32 teams, the year 2026) now works on the newest version of NHL Legacy Native too.
+If you patched 1.0.1 and then updated NHL Legacy Native to 1.0.2, the game runs without the patch until you open Blueline: the Game
+patch tab says so, press Patch again. Do this before you play Season, Be a GM or online. Rosters, pictures, team names and the
+editors work on 1.0.2 as before.
+
 ## 0.98.1 (2026-11-13)
 
 **Play NHL Legacy.** A green button at the top right starts the game: in RPCS3 it boots NHL Legacy straight away, on

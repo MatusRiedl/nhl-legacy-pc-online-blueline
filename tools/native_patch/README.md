@@ -20,10 +20,10 @@ py -3.13 -B tools/native_patch/build.py <port clone> <NHLLegacy.exe> <work folde
 ```
 
 Takes a few minutes. It compares the lift with the raw lift and stops when a word of the patch lands in no replaced function.
-`<work>/portpatch.zip` holds one build's file. The pack players get holds every build (0.98.0: 1.0.0 and 1.0.1):
+`<work>/portpatch.zip` holds one build's file. The pack players get holds every build (0.98.2: 1.0.0, 1.0.1 and 1.0.2):
 
 ```
-py -3.13 -B tools/native_patch/build.py --merge <out>/portpatch.zip <work 1.0.0>/portpatch.zip <work 1.0.1>/portpatch.zip
+py -3.13 -B tools/native_patch/build.py --merge <out>/portpatch.zip <work 1.0.0>/portpatch.zip <work 1.0.1>/portpatch.zip <work 1.0.2>/portpatch.zip
 ```
 
 Its `index.json` lists each file under `builds`. 1.0.0's file also stays at the old top-level names (`stamp`, `image`,
@@ -46,12 +46,15 @@ a new port version means: no patch until this is done, RPCS3 players are not tou
 
 1. New `BUILDS` row: `table` (the `function_table` in `.rdata`: rows of guest address, host function, name), `tramp_off`, and
    the addresses of `helpers` and `data`. None are exported.
-   - **When a known build exists** (how 1.0.1 was done, 2026-11-13): find the table by the old table's first guest addresses.
-     If it has the same rows, the lift is the same. Then disassemble the same lifted functions in both exes (via the two tables
-     and `.pdata`; capstone) and pair each old helper / data address with the new one at the same place. 1.0.1: 2,135 of 2,135
-     sampled functions had the same instructions, and every helper and data address paired the same way every time. Compare the
-     helpers' own bodies too: their thread-block offsets show `tramp_off` (1.0.1: +0x340, 0x4170 -> 0x44b0). Check that the
-     79,800,000 clock constant is in `.text` 5 times (`console_clock`). docs/notes/native-101.md has the numbers.
+   - **When a known build exists** (1.0.1 by hand on 2026-11-13, 1.0.2 by the tool on 2026-11-15): run
+     `py -3.13 -B tools/native_patch/pair.py <known NHLLegacy.exe> <new NHLLegacy.exe> --swap <known work>/swap.json`
+     (needs capstone). It finds the table by the old table's first guest addresses, checks the same rows, disassembles every
+     40th lifted function and every function the patch replaces in both exes (via the two tables and `.pdata`, with calls and
+     memory references taken out), pairs each old helper / data address with the new one, compares the helpers' bodies (their
+     thread-block offsets give `tramp_off`; lifted code must move by the same amount) and counts the 79,800,000 clock constant
+     (`console_clock`, 5 times). It prints the `BUILDS` row and the `NATIVE_PATCHED` entry, or stops with "Translated again"
+     when any of this differs (then do it from nothing). Run 1.0.0 -> 1.0.1 it gives back 1.0.1's row exactly. The lift is the
+     same, so copy the known build's work folder and build with `--skip-lift`. docs/notes/native-101.md, native-102.md.
    - **From nothing**: find a helper by small functions in the raw lift that call one helper only: the call all of those have in
      common in the exe is that helper (`llvm-objdump -d`). Read `data` and `tramp_off` from those helpers' code.
 2. `NATIVE_PATCHED` in `savedata.py`: the new stamp and image.
@@ -59,8 +62,10 @@ a new port version means: no patch until this is done, RPCS3 players are not tou
    next to the DLL says what was swapped, or which function did not match. `NHL_PUCKPEAK_NOSWAP=1` turns the swap off without
    removing the file.
 
-`NHLLauncher.exe` loads our file too (the lab saw its "not the exe this was made for" line in 2026-11; a static read of its import
-table in 2026-11-13 did not find the import, so it may come in through another DLL). That line is harmless. The launcher stays
+`NHLLauncher.exe` loads our file too: its pad code loads `xinput1_4.dll` by name at run time (it tries 1_4, 1_3, 1_2, 1_1,
+9_1_0), so it is not in its import table. Our file sees another exe and only passes the calls on ("not the exe this was made for"
+in the log); that line is harmless. Since 1.0.2 `SDL3.dll` (loaded by `NHLLegacy.exe` for other pads) also loads it by name and
+asks for ordinals 100 / 108 and the battery call: `proxy.def` exports them all and passes each to the system's file. The launcher stays
 open behind the game and holds the file, so the program refuses Patch and Unpatch while it runs (`savedata.launcher_running`).
 
 ## Online

@@ -348,6 +348,8 @@ def test_only_the_build_the_patch_file_was_made_for_can_be_patched(port):
     assert savedata.find_rpcs3(str(port)).patchable
     build_of(port, 0x6af40f41, 0x1a614000)                          # 1.0.1 (0.98.0)
     assert savedata.find_rpcs3(str(port)).patchable
+    build_of(port, 0x6af8ae19, 0x1a633000)                          # 1.0.2 (0.98.2)
+    assert savedata.find_rpcs3(str(port)).patchable
 
 
 def test_patch_and_unpatch_on_the_port(patched_port, port):
@@ -474,6 +476,58 @@ def test_a_port_updated_to_101_under_the_patch_is_patched_again(patched_port, po
     assert st['patched'] and not st['stale']
     patchinstall.remove(patched_port, say=lambda line: None)
     assert not (port / patchinstall.PORT_FILE).exists()
+
+
+V102 = (0x6af8ae19, 0x1a633000)
+
+
+def three_builds(folder):
+    """The pack as 0.98.2 publishes it: 1.0.0's file at the old top-level name, a file per build under `builds`."""
+    builds = [{'stamp': f'{s:08x}', 'image': f'{i:08x}', 'file': f'XINPUT1_4-{s:08x}.dll'}
+              for s, i in ((0x6ae7cb75, 0x1a657000), V101, V102)]
+    with zipfile.ZipFile(folder / 'portpatch.zip', 'w') as z:
+        z.writestr('index.json', json.dumps({'version': '0.27', 'stamp': '6ae7cb75', 'image': '1a657000', 'builds': builds}))
+        z.writestr(patchinstall.PORT_FILE, b'for 1.0.0')
+        for b, body in zip(builds, (b'for 1.0.0', b'for 1.0.1', b'for 1.0.2')):
+            z.writestr(b['file'], body)
+
+
+def test_a_port_updated_to_102_under_the_patch_is_patched_again(patched_port, port, tmp_path, capsys):
+    """A player patched 1.0.1, then copied 1.0.2 over it: 1.0.1's file reads stale, Patch again puts in 1.0.2's."""
+    three_builds(tmp_path / 'packs')
+    title = savedata.NATIVE_TITLE
+    build_of(port, *V101)
+    patchinstall.install_patch(patched_port, [title], roster=b'roster', say=lambda line: None)
+    assert (port / patchinstall.PORT_FILE).read_bytes() == b'for 1.0.1'
+    build_of(port, *V102)
+    st = patchinstall.state(patched_port)[title]
+    assert st['stale'] and not st['patched']
+    from legacy_roster import cli
+    cli.main(['game-patch', 'status', '--rpcs3', str(port)])
+    said = capsys.readouterr().out
+    assert patchinstall.PORT_NEWER in said and 'install again' in said and 'remove' not in said
+    patchinstall.install_patch(patched_port, [title], roster=b'roster', say=lambda line: None)
+    assert (port / patchinstall.PORT_FILE).read_bytes() == b'for 1.0.2'
+    st = patchinstall.state(patched_port)[title]
+    assert st['patched'] and not st['stale'] and st['version'] == '0.27'
+    patchinstall.remove(patched_port, say=lambda line: None)
+    assert not (port / patchinstall.PORT_FILE).exists()
+
+
+def test_the_game_patch_tab_says_patch_again_on_a_port_updated_to_102(window, patched_port, port, tmp_path):
+    """The window's side: a port patched on 1.0.1 and then updated to 1.0.2 offers Patch again, not only Unpatch."""
+    from legacy_roster.app import texts as X
+    from .test_app import wait
+    three_builds(tmp_path / 'packs')
+    title = savedata.NATIVE_TITLE
+    build_of(port, *V101)
+    patchinstall.install_patch(patched_port, [title], roster=b'roster', say=lambda line: None)
+    build_of(port, *V102)
+    window.set_rpcs3(str(port))
+    wait(lambda: not window.scanning and window.patch_state.get(title, {}).get('stale'))
+    view = window.snapshot()['patch']
+    assert [b['label'] for b in view['buttons']] == ["Patch again", "Unpatch"]
+    assert view['state']['text'] != X.PATCH_NATIVE and 'new version' in view['regions'][0]['state']
 
 
 def test_a_patch_file_put_in_before_0_98_0_counts_as_one_for_1_0_0():

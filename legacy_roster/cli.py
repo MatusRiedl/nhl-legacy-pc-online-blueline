@@ -558,6 +558,8 @@ def cmd_game_patch(args):
             extra = [what for what, on in (("the intro skipped", st['intro']), ("no pop-ups at start", st['login'])) if on]
             print(f"{savedata.region(title)}: patched for 32 teams and the year 2026 ({st['version']}, game "
                   f"{st['game']})" + (f", {', '.join(extra)}" if extra else ""))
+        elif st['stale'] and rpcs3.native and rpcs3.patchable:
+            print(patchinstall.PORT_NEWER + " Run game-patch install again.")
         elif st['stale'] and rpcs3.native:
             print(patchinstall.PORT_OTHER + " Run game-patch remove.")
         elif st['stale']:
