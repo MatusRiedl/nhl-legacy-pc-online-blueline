@@ -3,6 +3,16 @@
 What changed in each version, for players. Developers: details in [AGENTS.md](AGENTS.md)
 ("Current state") and [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## 0.98.3 (2026-11-16)
+
+**Be a CHL Pro: no more freeze in late January.** In a Be a CHL Pro career, the season of your pro's draft year froze when the
+game simulated 28 January (season 2 or later). The game added a Top Prospects game whose two teams our game patch leaves out,
+so it tried to play a team against itself. The game patch (0.28) now leaves that game out too.
+
+Open Blueline: the Game patch tab says Patch again. Press it before you play on. On NHL Legacy Native too. Careers that have
+not reached the draft-year season yet are then fine. A career that is already in that season still has the game in its
+calendar: ask us on Discord for help with that save. Online, both players need 0.98.3.
+
 ## 0.98.2 (2026-11-15)
 
 **NHL Legacy Native 1.0.2.** The game patch (32 teams, the year 2026) now works on the newest version of NHL Legacy Native too.

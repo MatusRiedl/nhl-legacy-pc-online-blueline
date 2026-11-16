@@ -34,7 +34,7 @@ VERSIONS = ('01.00', '01.01')
 YEARS_LATER = 11                                         # 2015 -> 2026
 YEAR_ENTRY = "NHL Legacy year 2026 (test)"
 PATCH_VERSION = '0.9'                                    # 0.9: the Calendar screen's Home / Away marks
-TEAMS_VERSION = '0.27'                                   # 0.27: stage Z (Be a CHL Pro); 0.23: the roster's player rights in six bits, Vegas's too (lab round 42);
+TEAMS_VERSION = '0.28'                                   # 0.28: stage Z also leaves out the Top Prospects game; 0.27: stage Z (Be a CHL Pro); 0.23: the roster's player rights in six bits, Vegas's too (lab round 42);
 #                                                          0.24: the same words, the news entry (NEWS_ENTRY) ticked with them;
 #                                                          0.25: the same words, also for update 1.01;
 #                                                          0.26: the year entry 0.9 (the Calendar screen's marks)
@@ -1065,10 +1065,19 @@ LEAGUE_SLOTS = {234: AHL_PACIFIC, 235: AHL_PACIFIC, 251: WHL_BC}        # 251: t
 # WHL club) is also a 7-bit key field's "no team", and those careers crashed on the first days. The career setup 0x286e00
 # adds the Top Prospects teams last (0x285740: their keys go to settings 0x39 / 0x3a); without that call no key is stored,
 # 0x1635b4 gives -16 ("none") as in every career the game makes without them, and a CHL career has 126 teams.
+# 0.28 (2026-11-16, a tester's career, docs/notes/crash-1baf18.md): the season calendar the game makes itself
+# (`_GenerateLeagueSchedule` 0x28470c, season 2 on) still added the Top Prospects game in the pro's draft year:
+# 0x2724dc(mode, 1) is true in a Be a Pro career whose pro plays in the CHL, is not drafted and is in his draft year, and
+# 0x284258 then writes one game of round 5 between settings 0x39 / 0x3a. Without the teams those read 0, so the game was
+# "Anaheim v Anaheim" on 28 January and the sim crashed in the line-up code (0x1bab10). The beq that skips the game
+# becomes b: the calendar is made as in Season and Be a GM, where the check is false (r28 stays 0, so 0x2831b4 frees no day).
 STAGE_Z = (
     (0x28715c, 0x4bffe5e5, NOP, "career setup: nop (was bl 0x285740, the Top Prospects teams): a CHL career keeps 126 "
                                 "team keys, none of them 127"),
+    (0x28491c, 0x41820060, 0x48000060, "season calendar: beq -> b, no Top Prospects game (its teams are left out; it "
+                                       "was a team against itself on 28 January of the draft year)"),
 )
+OTHER_INSTRUCTIONS += (0x28491c,)
 STAGE_Z_CAVES = ()
 
 # yearfirstsigned, yearprodebut, yearufa, yearwaivereligible: read against the league's own year, so year_shift leaves
@@ -1151,8 +1160,9 @@ TEAM_STAGES = (
      "Coachella Valley and Henderson in the AHL's team lists (Play Now, Roster Management), with their own names, not "
      "under Custom Teams. Only with a roster made for it and the team names written by the NHL Legacy Roster Updater."),
     ("NHL Legacy 32 teams Z - Be a CHL Pro (test)", STAGE_Z, STAGE_Z_CAVES,
-     "A Be a CHL Pro career no longer crashes in its first days. It leaves out the Top Prospects teams, so its teams fit "
-     "the room the game has for them. Only with all other 32-team entries."),
+     "A Be a CHL Pro career no longer crashes in its first days or in late January of the pro's draft year. It leaves "
+     "out the Top Prospects teams and their game, so its teams fit the room the game has for them. Only with all other "
+     "32-team entries."),
 )
 
 

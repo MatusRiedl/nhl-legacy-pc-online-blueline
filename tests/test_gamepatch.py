@@ -110,6 +110,19 @@ def test_the_ported_words_go_where_the_games_went():
     assert gamepatch.ported_code(skip) == skip
 
 
+def test_a_chl_pros_own_season_calendar_gets_no_top_prospects_game():
+    # A tester's career (docs/notes/crash-1baf18.md): stage Z leaves the Top Prospects teams out, and the calendar the game
+    # makes for a later season still added their game in the pro's draft year, "Anaheim v Anaheim" on 28 January. The
+    # beq that skips adding it is a b in every game version, in the one entry players switch on.
+    assert (0x28491c, 0x41820060, 0x48000060) in [(a, old, new) for a, old, new, _ in gamepatch.STAGE_Z]
+    assert gamepatch.at(0x28491c, '01.01') == 0x285a0c
+    assert gamepatch.ported_word(0x28491c, 0x48000060, '01.01') == 0x48000060          # same jump, same distance
+    lines = [line.split('#')[0].strip() for line in gamepatch.player_patch_text().splitlines()]
+    assert lines.count('- [ be32, 0x0028491c, 0x48000060 ]') == 2                      # EU 1.00 and NA 1.00
+    assert lines.count('- [ be32, 0x00285a0c, 0x48000060 ]') == 1                      # 1.01, both titles
+    assert gamepatch.TEAMS_VERSION == '0.28'
+
+
 def test_only_the_games_own_years_move():
     assert [gamepatch.year_of(y) for y in (1987, 2009, 2010, 2015, 2016, 2025, 2026, 2037)] == \
         [1987, 2009, 2021, 2026, 2027, 2036, 2026, 2037]
@@ -349,7 +362,7 @@ def test_the_32_team_entries_change_only_numbers_and_never_one_address_twice():
     assert [sum(place == n for place, _ in won) for n in range(16)] == list(odds)
     assert set(gamepatch.OTHER_INSTRUCTIONS) <= set(k) | {a for a, *_ in gamepatch.STAGE_Q} | {a for a, *_ in gamepatch.YEAR_LABELS} \
         | {a for a, *_ in gamepatch.STAGE_U} | {a for a, *_ in gamepatch.INTRO} | {a for a, *_ in gamepatch.STAGE_X} \
-        | {a for a, *_ in gamepatch.STAGE_Y} | {a for a, *_ in gamepatch.NEWS}
+        | {a for a, *_ in gamepatch.STAGE_Y} | {a for a, *_ in gamepatch.NEWS} | {a for a, *_ in gamepatch.STAGE_Z}
     assert all(code[-1][0] == old for _, old, code, _ in gamepatch.STAGE_K_CAVES)   # each ends with the game's own word
     room = {addr: (old, new) for addr, old, new, _ in gamepatch.STAGE_S}     # data: a roster table's room, not code
     assert room == {a: (1291, schedule.PATCH_ROWS) for a in gamepatch.ROOM_WORDS} and set(room) <= set(gamepatch.DATA_WORDS)
