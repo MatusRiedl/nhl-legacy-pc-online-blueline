@@ -21,7 +21,8 @@ Questions, news and help: **[gg.puckpeak.com](https://gg.puckpeak.com)**
 ## ✨ Highlights
 
 - 🏟 **Today's NHL, in your old game.** Every player on his real team, lines, captains, contracts, draft, ratings.
-- 🖥 **RPCS3 or the PC port.** Point it at RPCS3 or at NHL Legacy Native and it works out the rest.
+- ▶️ **Play with Blueline, nothing else to install.** Pick your game's ISO and Blueline sets up its own RPCS3 for NHL Legacy, with the **goal light** fixed, no endless loading at high resolutions, your **game settings** and **keyboard and mouse** controls on the Setup tab.
+- 🖥 **Or your own RPCS3, or the PC port.** Point it at RPCS3 or at NHL Legacy Native and it works out the rest.
 - 🌍 **The whole hockey world.** National teams plus Liiga, Extraliga, SHL, DEL, National League, AHL and the CHL, with real rosters, and the Penticton Vees in the WHL.
 - 📸 **Real faces, real logos, real names.** Today's photos and club logos in the game's menus; Utah, Seattle and Vegas as they should be.
 - 👕 **New jerseys and ice.** The new franchises get their own jerseys, helmets and centre-ice logo, and you can paint your own for any team of any league.
@@ -44,8 +45,8 @@ Questions, news and help: **[gg.puckpeak.com](https://gg.puckpeak.com)**
 ## 🚀 Get started
 
 1. Download `BluelineLegacy.exe` (about 26 MB, Windows) or `BluelineLegacy-<version>-linux.tar.gz` (Linux) from the release page.
-2. In **Setup**, show it where `rpcs3.exe` or NHL Legacy Native's `NHLLauncher.exe` is and pick a roster. In **Update**, switch on what you want and press **Update roster**.
-3. Start the game. That is all.
+2. In **Setup**, choose **Play with Blueline** and pick your game's ISO, then press **Set up** (or show it your own `rpcs3.exe` or NHL Legacy Native's `NHLLauncher.exe`). Pick a roster. In **Update**, switch on what you want and press **Update roster**.
+3. Press **Play NHL Legacy** at the top right. That is all.
 
 No roster yet? It can start from the game's own. Built for the NHL Legacy community, by [Puck Peak](https://www.puckpeak.com).
 Questions or ideas? Come to our [Discord](https://gg.puckpeak.com) (the **Join our Discord** button at the top of the Setup tab).
@@ -393,10 +394,35 @@ you can remove any one.
 changes the roster you picked (the old one is copied to the backup folder first), **Save as a new
 roster** makes a new one. It is the same choice as on the Update tab.
 
+## Play with Blueline (no RPCS3 of your own needed)
+
+On the Setup tab, **Play with Blueline** is the first choice under "Where is your game?". It has three rows that turn green:
+
+1. **RPCS3 for NHL Legacy.** Blueline downloads its own copy of RPCS3 (Windows or Linux) into a folder of its own
+   (`%LOCALAPPDATA%\NHLLegacyRosterUpdater\rpcs3`; **Change** next to the folder puts it elsewhere; it needs about 3 GB with
+   the game's caches). This copy has the **goal light** fixed: the red lamp behind the net lights up after a goal.
+2. **PS3 system software.** RPCS3 needs Sony's PS3 system software once. Blueline downloads it from Sony's own server and
+   checks it (or pick a `PS3UPDAT.PUP` you have).
+3. **Your game.** Pick the ISO of your NHL Legacy disc (EU or NA; a decrypted ISO, as RPCS3 needs) or the game's folder.
+
+**Set up** does whatever is missing. Then **Play NHL Legacy** starts the game straight away, with no RPCS3 window first.
+Your rosters, the game patch, the pictures and online play all work with this copy as with any RPCS3.
+
+**Game settings** (Setup): resolution (720p to 4K), fullscreen or window, frame limit, VSync and volume. Above 100 % Blueline
+ticks RPCS3's "Disable Blit Engine Upscaling" by itself, so matches no longer load for ever at high resolutions. With your own
+RPCS3 the same settings and the fix apply each time Blueline starts the game; your own RPCS3's files stay as they are, and **Use
+RPCS3's own settings** goes back to them.
+
+**Controls** (Setup, Blueline's RPCS3 only): a controller (the default) or keyboard and mouse. In **Controls...** click a button,
+then press the key or mouse button for it; the mouse can move the right stick. With your own RPCS3 set the controls in RPCS3's own Pads menu.
+
+Online: Blueline's RPCS3 needs an RPCN account like any RPCS3. The Multiplayer tab offers to use the account of your other
+RPCS3, or opens Blueline's RPCS3 so you can make one.
+
 ## What you need
 
-- Windows and RPCS3 with NHL Legacy Edition, European (`BLES02153`) or North American
-  (`BLUS31540`), or both; or NHL Legacy Native (above).
+- Windows or Linux, and one of: NHL Legacy Edition as an ISO (Blueline sets up RPCS3 for it, above), RPCS3 with NHL Legacy
+  Edition, European (`BLES02153`) or North American (`BLUS31540`), or both; or NHL Legacy Native (above).
 - A roster to start from: a **community roster** (the 2025-26 roster family or the community's
   2026-27 roster, also a file you put into a save folder by hand), or **the game's own roster**
   (see above). A roster you saved in the game without loading a community roster counts as the
@@ -517,6 +543,11 @@ and player names belong to their owners. The program uses photos and logos publi
 ESPN, the leagues and Wikipedia; no game files are included (the game's own roster, its pictures'
 templates and its icon are read from your copy of the game). Unofficial fan project, not affiliated with
 or endorsed by the game's makers or the league. Code is under the [MIT licence](LICENSE) (c) 2026 Matus Riedl.
+
+Blueline's own RPCS3 is [RPCS3](https://rpcs3.net) (GPL v2), built by GitHub from our public copy of its source with one change
+(the goal light): [github.com/MatusRiedl/rpcs3](https://github.com/MatusRiedl/rpcs3/tree/blueline). It is downloaded when you choose
+it, not inside Blueline; its licence and the address of its source come with it. The PS3 system software is Sony's and is downloaded
+from Sony; we never host it.
 
 A [Puck Peak](https://www.puckpeak.com) project (NHL & hockey analytics like never before): the
 window wears Puck Peak's look and logo, and the logo links to www.puckpeak.com. The window is a page shown by

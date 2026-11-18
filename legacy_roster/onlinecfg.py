@@ -2,6 +2,7 @@
 running RPCS3, standard library only. The player's own RPCS3 files are only read:
 
     account(rpcs3)                  the RPCN name in config/rpcn.yml (never the password or the token)
+    account_file(rpcs3)             where that rpcn.yml is (the built-in RPCS3 may copy the player's other one)
     net_config(text, address)       a config.yml with the Net block set for our server, every other line as it was
     write_config(rpcs3, title, ip)  that config as the app's own file (online/config_<TITLE>.yml in the program's folder)
     launch_args(rpcs3, title, cfg)  rpcs3.exe (AppImage, flatpak run ...) --no-gui --config <cfg> <game>
@@ -26,6 +27,14 @@ SWAP = 'IP swap list'
 MIN_RPCS3 = 20393                    # the oldest RPCS3 build the online lab played with (lab 1); older ones are told to update
 MATHS_KEY, MATHS = 'SPU XFloat Accuracy', 'Accurate'     # every online config (maths_config)
 MATHS_WORD = 'exact'                  # part of the lobby's patch word: an older app's games would drift away from these
+
+
+def account_file(rpcs3):
+    """Where RPCS3's rpcn.yml is (config/ on Windows, next to its data on Linux and Mac), or None."""
+    for path in (os.path.join(rpcs3.folder, 'config', 'rpcn.yml'), os.path.join(rpcs3.folder, 'rpcn.yml')):
+        if os.path.isfile(path):
+            return path
+    return None
 
 
 def account(rpcs3):
@@ -199,6 +208,8 @@ def log_path(rpcs3, posix=os.name != 'nt'):
     home = os.path.expanduser('~')
     cache = os.environ.get('XDG_CACHE_HOME') or os.path.join(home, '.cache')
     places = [os.path.join(rpcs3.folder, 'log', 'RPCS3.log')]
+    if posix and getattr(rpcs3, 'builtin', False):          # the built-in copy: its own cache folder (savedata.launch)
+        return os.path.join(savedata.builtin_cache(rpcs3.exe), 'rpcs3', 'RPCS3.log')
     if posix:
         flatpak_cache = os.path.join(home, '.var', 'app', 'net.rpcs3.RPCS3', 'cache', 'rpcs3', 'RPCS3.log')
         places += ([flatpak_cache, os.path.join(cache, 'rpcs3', 'RPCS3.log')] if rpcs3.flatpak

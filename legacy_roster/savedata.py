@@ -41,6 +41,8 @@ FILES = ('ICON0.PNG', 'PARAM.SFO', 'SYS-DATA')
 GAMES = {'BLES02153': 'EU', 'BLUS31540': 'NA'}
 TITLES = {'BLES02153': "NHL™ Legacy Edition", 'BLUS31540': "NHL® Legacy Edition"}
 WINDOWS, MAC = os.name == 'nt', sys.platform == 'darwin'
+PORTABLE = 'portable'                   # a folder of this name next to RPCS3's program holds all its data
+BUILTIN_STAMP = 'blueline.json'         # next to the built-in RPCS3's program (emulator.py)
 # what the player is asked to pick, in his system's words
 PICK_RPCS3 = ("Pick the file rpcs3.exe in your RPCS3 folder, or NHLLauncher.exe in your NHL Legacy Native folder." if WINDOWS else
               "Pick RPCS3.app, or RPCS3's folder (~/Library/Application Support/rpcs3)." if MAC else
@@ -228,11 +230,20 @@ def clean_environment():
 OUR_VARIABLES = set()       # variables this program set for itself (window/main.linux_engine): not passed on
 
 
+def builtin_cache(exe):
+    """The cache folder of the built-in RPCS3 whose program is `exe` (Linux: RPCS3's cache and log ignore portable/, so
+    `launch` points XDG_CACHE_HOME here; RPCS3 adds rpcs3/)."""
+    return os.path.join(os.path.dirname(exe), 'cache')
+
+
 def launch(args, **kw):
     """Start another program free of this one's unpacked folder. On Windows the exe's launcher also sets the DLL
     search folder (SetDllDirectory) to _MEI..., and a child inherits it: RPCS3 then loaded our vcruntime140.dll.
-    The setting is cleared while the child starts and put back after."""
+    The setting is cleared while the child starts and put back after. The built-in RPCS3 on Linux keeps its cache and log in
+    its own folder (builtin_cache)."""
     kw.setdefault('env', clean_environment())
+    if not WINDOWS and args and os.path.isfile(os.path.join(os.path.dirname(args[0]), BUILTIN_STAMP)):
+        kw['env'] = dict(kw['env'], XDG_CACHE_HOME=builtin_cache(args[0]))
     base = getattr(sys, '_MEIPASS', None)
     if os.name != 'nt' or not base:
         return subprocess.Popen(args, **kw)
@@ -301,6 +312,11 @@ class Rpcs3:
         self.savedata = savedata
         self.user = user
         self.dev_hdd0 = _dev_hdd0(self.folder)
+
+    @property
+    def builtin(self):
+        """Is this the RPCS3 the program set up in a folder of its own (emulator.py marks it with BUILTIN_STAMP)?"""
+        return bool(self.exe) and os.path.isfile(os.path.join(os.path.dirname(self.exe), BUILTIN_STAMP))
 
     @property
     def flatpak(self):
@@ -666,8 +682,12 @@ def find_rpcs3(path, games=None):
             return _found_native(native, games)
         raise Rpcs3Error("That is not RPCS3. " + PICK_RPCS3)
     if root is None:            # the program: its data is next to it (Windows, a portable copy), else in the usual place
-        places = [os.path.dirname(os.path.normpath(exe))] + data_folders()
-        root = next((p for p in places if has_data(p)), places[0])
+        here = os.path.dirname(os.path.normpath(exe))
+        portable = os.path.join(here, PORTABLE)
+        places = [here] + data_folders()
+        # a folder "portable" next to the program (or the AppImage) wins on every system: RPCS3 keeps everything in it
+        # (Utilities/File.cpp get_config_dir); the built-in RPCS3 is such a copy (emulator.py)
+        root = portable if os.path.isdir(portable) else next((p for p in places if has_data(p)), places[0])
     home = os.path.join(_dev_hdd0(root), 'home')
     users = sorted(u for u in os.listdir(home) if re.fullmatch(r'\d{8}', u)) if os.path.isdir(home) else []
     newest = {}

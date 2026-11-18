@@ -267,6 +267,34 @@ on players' PCs; nothing checked it. Why Qt and not GTK: a bundled WebKitGTK can
 The system's own libraries (libstdc++, libgbm, X11, fontconfig, glib ...) are taken out of the folder after the build: the graphics driver loads into the program and needs the system's newer ones (with the box's copies inside, Qt got no OpenGL and the window was black). `savedata.clean_environment` keeps the program's own libraries away from RPCS3 (a Qt program), the file manager and
 the browser.
 
+## The built-in RPCS3 (0.99.0)
+
+"Play with Blueline" downloads RPCS3 as the pack `rpcs3-win` (the 7z's files) or `rpcs3-linux` (the AppImage), made from our fork
+(notes docs/notes/standalone.md, goal light docs/notes/goal-light.md).
+
+- **The fork:** `MatusRiedl/rpcs3`, branch `blueline` = RPCS3 master + one change, the goal light line in
+  `rpcs3/Emu/RSX/Program/VertexProgramDecompiler.cpp` (`RSX_SCA_OPCODE_RSQ`: `abs(x) == 0` gives +infinity). Never push the
+  owner's `RPCS3 Goal Light Patch.zip` anywhere; the branch has the change as a normal commit.
+- **A new build** (RPCS3 moved on, RPCN refuses old builds, a tester's crash fixed upstream): rebase `blueline` on RPCS3's master,
+  push it, start the workflow by hand (Actions > "Build RPCS3" > Run workflow on `blueline`, or the API's `workflow_dispatch`),
+  download both artifacts (they need a GitHub login), then make the packs:
+  `python tools/rpcs3_pack.py <unpacked 7z folder> --version <0.0.43-NNNNN> --commit <sha> --source https://github.com/MatusRiedl/rpcs3/tree/blueline`
+  and the same with the `.AppImage` plus `--license <the fork's LICENSE>`. Both land in `private/packs/`. The version is the build's
+  own (its window title shows `0.0.43-<commit>`; the 7z's name and the workflow log have the number).
+- **Before publishing a new build:** boot the EU ISO in a lab folder with it, play a match to a goal (the lamp lights), and load
+  a match at 300 % (blit). The Linux pack: unpack it in a box and run `rpcs3.AppImage --version`.
+- **Publish** with the owner's go: `python tools/publish_packs.py <host>:<folder> --only rpcs3-win,rpcs3-linux --dry-run`, then for
+  real. Players who have Blueline's RPCS3 see "A newer build is ready: press Set up" (the stamp's sha256 differs from the
+  manifest's); Set up replaces the program and keeps `portable/` (their settings, saves, firmware, caches).
+- **Once RPCS3 takes the fix itself:** the pack can be made from RPCS3's own build instead (same tool, `--source` its release page
+  on GitHub); README's credits and `rpcs3_pack.PATCHES` then change.
+- **The PS3 system software:** Blueline reads Sony's update list (`emulator.FIRMWARE_LIST`) and checks the file by the PUP header,
+  the MD5 in its address and `FIRMWARE_SHA256` (4.93). A version Sony lists later is checked by the header and the MD5 alone; add
+  its sha256 there at the next release. We never host the file.
+- **The game's settings:** `rpcs3cfg.BUILTIN_DEFAULTS` (written once after the firmware, when RPCS3 has saved its full config) and
+  `GAME_KEYS` (the Game settings card) use RPCS3's key names. A new RPCS3 that renames or moves a key (the blit option moved to
+  RPCS3's debug settings in PR #19343) needs them changed: read the new build's config.yml after its first start.
+
 ## The game patch
 
 - After any change to `gamepatch.py`'s stages: bump `TEAMS_VERSION`; run `python tools/audit_patch.py <EBOOT.ELF>`, which

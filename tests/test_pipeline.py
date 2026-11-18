@@ -139,6 +139,20 @@ def test_a_second_run_on_its_own_output_changes_nothing(built, data):
     assert again.data == built.data
 
 
+def test_an_estimated_player_counts_at_the_level_his_written_ratings_give(built):
+    """Lines are dealt on `quality`; the next run reads it from the attributes as written. A national player's estimate
+    clamps some attributes (0..63), so its own figure differs (Igor Merezhko at Plzen, 75.52 vs 75.6: a second build
+    swapped two defencemen in the overtime units)."""
+    b = built.builder
+    estimated = [pid for pid, how in b.rated_by.items() if how == 'estimate']
+    assert estimated
+    for pid in estimated:
+        for tname in ('yvSd', 'yuHm'):
+            row = b.ai_row[tname].get(pid)
+            if row is not None:
+                assert b.quality[pid] == pytest.approx(ratings.level(b.R.f[tname], row) + b.ovr_offset[tname == 'yuHm']), pid
+
+
 def test_steps_can_be_run_on_their_own(base_bytes, data):
     only_ratings = pipeline.build(base_bytes, Data(ratings_list=data.ratings_list, season_year=data.season_year),
                                   steps=[pipeline.RATINGS])

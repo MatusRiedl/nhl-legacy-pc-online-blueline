@@ -7,7 +7,7 @@ from legacy_roster.app.update import UpdateController
 
 class FakeHost(SimpleNamespace):
     def __init__(self, native=False, discs=None, command=('rpcs3.exe',)):
-        super().__init__(native=native, plain=False, name='RPCS3', _discs=discs or {}, _command=list(command))
+        super().__init__(native=native, plain=False, builtin=False, name='RPCS3', _discs=discs or {}, _command=list(command))
 
     def command(self):
         return self._command
@@ -19,13 +19,16 @@ class FakeHost(SimpleNamespace):
         return self._discs.get(title)
 
 
-def test_play_boots_the_picked_rosters_game_in_rpcs3():
+def test_play_boots_the_picked_rosters_game_in_rpcs3(monkeypatch):
+    from legacy_roster import rpcs3cfg
+    monkeypatch.setattr(rpcs3cfg, 'write_play', lambda r, title, choices: None)    # an RPCS3 that has not saved its settings
+    ctl = SimpleNamespace(settings={}, host=None)        # (with a config: tests/test_standalone_app.py)
     host = FakeHost(discs={'BLES01530': 'eu.iso', 'BLUS31540': 'na.iso'})
     play = UpdateController._play_command
-    assert play(None, host, SimpleNamespace(title_id='BLUS31540')) == ['rpcs3.exe', 'na.iso']
-    assert play(None, host, None) == ['rpcs3.exe', 'eu.iso']                 # no roster picked: the first game
-    assert play(None, FakeHost(), None) == ['rpcs3.exe']                      # RPCS3 does not say where the game is
-    assert play(None, FakeHost(command=()), None) is None
+    assert play(ctl, host, SimpleNamespace(title_id='BLUS31540')) == ['rpcs3.exe', 'na.iso']
+    assert play(ctl, host, None) == ['rpcs3.exe', 'eu.iso']                  # no roster picked: the first game
+    assert play(ctl, FakeHost(), None) == ['rpcs3.exe']                       # RPCS3 does not say where the game is
+    assert play(ctl, FakeHost(command=()), None) is None
 
 
 def test_play_opens_the_ports_launcher():

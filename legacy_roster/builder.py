@@ -2583,11 +2583,13 @@ class Builder:
             rated = self.write_list_rating(prow, on_list)
         estimate = None if rated else self._national_estimate(p, code, prof)
         if estimate and self.ai_row[estimate[0]].get(pid) is not None:
-            tname, base, adj, quality = estimate
+            tname, base, adj, _quality = estimate
             t, row = R.f[tname], self.ai_row[tname][pid]
             for n, v in base.items():
                 t.set(row, n, max(0, min(63, v + adj)))
-            self.quality[pid] = quality
+            # his level as written (clamped), as the next run reads it; the estimate's own figure dealt lines that the
+            # next run dealt again (Igor Merezhko, 75.52 by the estimate, 75.6 as written, at Plzen)
+            self.quality[pid] = ratings.level(t, row) + self.ovr_offset[tname == 'yuHm']
             self.rated_by[pid] = 'estimate'
         self.log.append([code, 'created', name, f"IIHF {code}, reused record of {old}", p.get('num')])
         return prow

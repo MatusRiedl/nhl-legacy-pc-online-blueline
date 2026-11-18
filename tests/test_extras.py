@@ -319,7 +319,8 @@ def test_every_installed_file_belongs_to_exactly_one_part():
     assert not any(parts.belongs('overlay:#1:overlay_0.big:x:sn:y', p) for p in parts.ALL)    # a retired part's
     assert parts.packs_for({parts.NAMES}) == [] and parts.packs_for(parts.LEGACY) == ['photos', 'looks', 'ice']
     assert parts.packs_for(set(parts.ALL)) == ['photos', 'looks', 'ice', 'arenas', 'masks']
-    assert set(packs.NAMES) - {'portpatch'} == set(parts.PACK_OF.values())   # the port's patch is no picture part
+    # the port's patch and the built-in RPCS3 are no picture parts
+    assert set(packs.NAMES) - {'portpatch', 'rpcs3-win', 'rpcs3-linux'} == set(parts.PACK_OF.values())
 
 
 # --- the update puts in only what is switched on ---------------------------------------------------------------

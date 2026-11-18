@@ -87,11 +87,15 @@ _HOST_READS = ()            # the game folders of that host that are only read (
 
 
 def host_key(rpcs3):
-    """The folder name (in the program's own folder) that keeps the lists and copies of the game `rpcs3`: None for RPCS3,
-    `native-<hash of the install folder>` for NHL Legacy Native."""
-    if rpcs3 is None or not getattr(rpcs3, 'native', False):
+    """The folder name (in the program's own folder) that keeps the lists and copies of the game `rpcs3`: None for the player's
+    RPCS3, `native-<hash of the install folder>` for NHL Legacy Native, `builtin-<hash>` for the built-in RPCS3 (emulator.py),
+    so a player with their own RPCS3 and the built-in one keeps two sets of pictures and Restore takes away only the picked one's."""
+    if rpcs3 is None:
         return None
-    return 'native-' + hashlib.sha1(os.path.normcase(rpcs3.folder).encode()).hexdigest()[:12]
+    for kind in ('native', 'builtin'):
+        if getattr(rpcs3, kind, False):
+            return f'{kind}-' + hashlib.sha1(os.path.normcase(rpcs3.folder).encode()).hexdigest()[:12]
+    return None
 
 
 def use_host(rpcs3):

@@ -23,7 +23,7 @@ import threading
 import time
 import urllib.parse
 
-from .. import datasource, gamepatch, hud, lobby, onlinecfg, patchinstall, savedata
+from .. import datasource, emulator, gamepatch, hud, lobby, onlinecfg, patchinstall, savedata
 from ..roster import Roster
 from ..stock import StockError
 from . import jobs
@@ -41,6 +41,9 @@ NAME_ASK = "Type the name other players will see: 3 to 16 letters, numbers, - or
 BAD_NAME = "Use 3 to 16 letters, numbers, - or _ for your name."
 NO_ACCOUNT = ("Make your online account once in RPCS3: Configuration > RPCN > Account > Create account. Pick a name and a "
               "password, type your e-mail, then paste the token from the e-mail. Come back here and press Check again.")
+NO_ACCOUNT_BUILTIN = ("Blueline's RPCS3 has no online account yet. Use the one of your other RPCS3, or open Blueline's RPCS3 and "
+                      "make one: Configuration > RPCN > Account > Create account (a name, a password, your e-mail, then the "
+                      "token from the e-mail). Close it and press Check again.")
 CLOSE_RPCS3 = "Close RPCS3 first: the online setup can only be changed while the game is closed."
 CLOSE_TO_COPY = "Close RPCS3 so your friend's roster can be copied."
 CLOSE_TO_BRING = "Close RPCS3 so your roster can be copied for the lobby."
@@ -134,6 +137,7 @@ class OnlineController:
         self.note = None                # {'text', 'tone'}: the last result
         self.checked = False            # looked at the PC at least once
         self.account = None             # the RPCN name in RPCS3's rpcn.yml
+        self.other = None               # Blueline's RPCS3 without an account: {'name', 'file'} of the player's other RPCS3's
         self.title = None               # the game version the lobby is played with (title id)
         self.state = {}                 # patchinstall.state()[title]
         self.build = None               # the RPCS3 build number from its log (None: not known)
@@ -223,9 +227,74 @@ class OnlineController:
             return None
         return rpcs3
 
+    def builtin(self):
+        """Is the game picked Blueline's own RPCS3?"""
+        return bool(getattr(getattr(self.update, 'rpcs3', None), 'builtin', False))
+
     def no_rpcs3(self):
         """What the tab says when no game is picked, or a port our patch file does not fit."""
         return X.ONLINE_NATIVE if self.port() else NO_RPCS3
+
+    def _other_account(self):
+        """{'name', 'file'}: the online account of the player's own RPCS3 (Setup's "My RPCS3"), or None. Only read."""
+        path = (self.update.settings.get('hosts') or {}).get('rpcs3')
+        if not path or not os.path.exists(path):
+            return None
+        try:
+            other = savedata.find_rpcs3(path)
+        except savedata.NoGameError as err:
+            other = err.rpcs3
+        except (savedata.Rpcs3Error, OSError):
+            return None
+        if other is None or other.plain or other.native or other.builtin:
+            return None
+        name, file = onlinecfg.account(other), onlinecfg.account_file(other)
+        return {'name': name, 'file': file} if name and file else None
+
+    def use_other_account(self):
+        """Copy the player's other RPCS3's rpcn.yml into Blueline's RPCS3 (the player pressed "Use ..."); then look again."""
+        with self.lock:
+            rpcs3, other = self.rpcs3(), self.other
+            if self.busy or rpcs3 is None or not rpcs3.builtin or not other:
+                return
+            if savedata.running_rpcs3():
+                self.note = {'text': CLOSE_RPCS3, 'tone': 'bad'}
+                self.changed()
+                return
+        target = os.path.join(emulator.config_dir(os.path.dirname(rpcs3.exe)), 'rpcn.yml')
+        try:
+            with open(other['file'], 'rb') as f:
+                data = f.read()
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            with open(target + '.tmp', 'wb') as f:
+                f.write(data)
+            os.replace(target + '.tmp', target)
+        except OSError as err:
+            with self.lock:
+                self.note = {'text': f"The account could not be copied ({err}).", 'tone': 'bad'}
+            self.changed()
+            return
+        with self.lock:
+            self.note = {'text': f"Blueline's RPCS3 now signs in as {other['name']}.", 'tone': 'good'}
+        self.refresh()
+
+    def open_builtin(self):
+        """Open Blueline's RPCS3 with its own window (to make an online account there)."""
+        rpcs3 = self.rpcs3()
+        if rpcs3 is None or not rpcs3.builtin:
+            return
+        if savedata.running_rpcs3():
+            with self.lock:
+                self.note = {'text': "RPCS3 is open already: switch to its window.", 'tone': 'bad'}
+            self.changed()
+            return
+        try:
+            flags = getattr(subprocess, 'DETACHED_PROCESS', 0) | getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
+            savedata.launch(rpcs3.command(), cwd=rpcs3.launch_dir(), close_fds=True, creationflags=flags)
+        except OSError as err:
+            with self.lock:
+                self.note = {'text': f"RPCS3 could not be started ({err}).", 'tone': 'bad'}
+            self.changed()
 
     def port(self):
         """Is the game picked NHL Legacy Native?"""
@@ -266,10 +335,13 @@ class OnlineController:
 
         def work():
             self._clear_start()
-            found = {'account': None, 'title': None, 'state': {}, 'roster': None, 'server': None, 'build': None, 'auto': False}
+            found = {'account': None, 'title': None, 'state': {}, 'roster': None, 'server': None, 'build': None, 'auto': False,
+                     'other': None}
             if rpcs3 is None:
                 return found
             found['account'] = self.typed_name() if rpcs3.native else onlinecfg.account(rpcs3)
+            if rpcs3.builtin and not found['account']:
+                found['other'] = self._other_account()
             found['build'] = None if rpcs3.native else onlinecfg.rpcs3_build(rpcs3)
             states = patchinstall.state(rpcs3)
             titles = [t for t in versions if t in states] or [t for t in states if rpcs3.game_disc(t)]
@@ -404,7 +476,7 @@ class OnlineController:
                 self.changed()
                 return
             if not self.account:
-                self.note = {'text': NO_ACCOUNT, 'tone': 'bad'}
+                self.note = {'text': NO_ACCOUNT_BUILTIN if rpcs3.builtin else NO_ACCOUNT, 'tone': 'bad'}
                 self.changed()
                 return
             patch = not self.marks()['patched']
@@ -1419,7 +1491,8 @@ class OnlineController:
                     'build': self.build, 'build_note': self.build_note(), 'game_note': self.game_note(), 'build_old': self.build_problem(),
                     'lobby': self.lobby, 'code': self.code, 'role': role, 'steps': self.steps(role) if role else [],
                     'public': self.public, 'open': self.rows(), 'open_error': self.open_error,
-                    'progress': PROGRESS, 'why': self.why(), 'no_account': NAME_ASK if self.port() else NO_ACCOUNT,
+                    'progress': PROGRESS, 'why': self.why(), 'no_account': NAME_ASK if self.port() else NO_ACCOUNT_BUILTIN if self.builtin() else NO_ACCOUNT,
+                    'builtin': self.builtin(), 'other': (self.other or {}).get('name') if self.builtin() else None,
                     'launched': bool(self.launched),
                     'ended': bool(self.ended), 'chat': self.chat(), 'chat_wait': time.time() < self.chat_wait,
                     'phrases': PHRASES, 'ranks': self.ranks_view(), 'result': self.result_view(),

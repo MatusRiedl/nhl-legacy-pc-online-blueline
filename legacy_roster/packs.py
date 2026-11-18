@@ -26,8 +26,9 @@ import re
 from . import datasource
 
 NAMES = ('photos', 'looks', 'arenas', 'ice', 'masks',      # 0.76.0: arenas, ice and masks (art/parts.py PACK_OF)
-         'portpatch')                                      # the game patch for NHL Legacy Native (patchinstall.PORT_PACK)
-ASKED_FOR = ('portpatch',)                                 # downloaded only when named: an RPCS3 player has no use for it
+         'portpatch',                                      # the game patch for NHL Legacy Native (patchinstall.PORT_PACK)
+         'rpcs3-win', 'rpcs3-linux')                       # 0.99.0: the built-in RPCS3 (emulator.PACKS)
+ASKED_FOR = ('portpatch', 'rpcs3-win', 'rpcs3-linux')      # downloaded only when named: a player of another game has no use for it
 FORMAT = 1
 STATE = 'state.json'
 

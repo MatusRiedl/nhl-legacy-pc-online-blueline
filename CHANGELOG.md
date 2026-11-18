@@ -3,6 +3,37 @@
 What changed in each version, for players. Developers: details in [AGENTS.md](AGENTS.md)
 ("Current state") and [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## 0.99.0 (2026-11-16)
+
+**Play with Blueline: no RPCS3 of your own needed.** In Setup, "Where is your game?" has a new first choice, **Play with
+Blueline**. Pick your game's ISO and press **Set up**: Blueline downloads its own RPCS3 made for NHL Legacy and Sony's PS3 system
+software, checks your game, and from then on **Play NHL Legacy** starts the game straight away. Your own RPCS3 and NHL Legacy
+Native work as before.
+
+**The goal light works.** Blueline's RPCS3 carries a fix so the red lamp behind the net lights up after a goal. (Only in
+Blueline's RPCS3: your own RPCS3 needs a newer RPCS3 with the same fix.)
+
+**No more endless loading at high resolutions.** Above 720p a match could load for ever unless RPCS3's "Disable Blit Engine
+Upscaling" was ticked. Blueline now ticks it by itself whenever it starts the game, in its own RPCS3 and in yours (your own
+RPCS3's files are never changed: Blueline starts it with a copy of its settings).
+
+**Game settings on the Setup tab.** Resolution (720p to 4K), fullscreen or window, frame limit, VSync and volume, for Blueline's
+RPCS3 and for yours.
+
+**Keyboard and mouse.** With Blueline's RPCS3, **Controls...** on the Setup tab picks a controller or keyboard and mouse, and
+any button can be put on any key or mouse button.
+
+Online works with Blueline's RPCS3 too; the Multiplayer tab can use the RPCN account of your other RPCS3.
+
+**Be a CHL Pro: careers already in the draft-year season play on.** 0.98.3 kept the Top Prospects game out of seasons made
+after it, but a career whose draft-year season was made before still froze on 28 January, the Top Prospects day. The game
+patch (0.29) now skips that day when its teams are not there, so such a career simply plays on. Open Blueline and press
+Patch again on the Game patch tab (on NHL Legacy Native too). Online, both players need 0.99.0.
+
+A second update in a row no longer swaps two defencemen in a club's overtime units.
+
+Also in this version: everything of 0.98.3 and 0.98.2 (below).
+
 ## 0.98.3 (2026-11-16)
 
 **Be a CHL Pro: no more freeze in late January.** In a Be a CHL Pro career, the season of your pro's draft year froze when the

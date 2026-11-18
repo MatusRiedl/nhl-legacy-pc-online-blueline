@@ -22,6 +22,7 @@ class WebHost:
     def __init__(self):
         self.window = None
         self.sources = {}           # slice name -> snapshot()
+        self.follows = {}           # slice name -> slices drawn from it, pushed again with it (follow)
         self._lock = threading.Lock()
         self._wake = threading.Event()
         self._dirty = set()
@@ -43,10 +44,15 @@ class WebHost:
     def register(self, name, snapshot):
         self.sources[name] = snapshot
 
+    def follow(self, name, others):
+        """Push `others` again whenever `name` changes (Setup's cards that read the game in use from `update`)."""
+        self.follows[name] = tuple(others)
+
     # --- what the controllers call --------------------------------------------------------------
     def changed(self, name):
         with self._lock:
             self._dirty.add(name)
+            self._dirty.update(self.follows.get(name, ()))
         self._wake.set()
 
     def log(self, *lines):

@@ -24,12 +24,14 @@ def _safe(method):
 
 class Api:
     def __init__(self, host, update, editor=None, uniforms=None, equipment=None, lines=None, strategy=None,
-                 calendar=None, office=None, prospects=None, career=None, online=None):
+                 calendar=None, office=None, prospects=None, career=None, online=None, builtin=None, game=None,
+                 controls=None):
         self._host, self._update, self._editor, self._uniforms = host, update, editor, uniforms
         self._equipment, self._lines, self._strategy = equipment, lines, strategy
         self._calendar, self._office, self._prospects = calendar, office, prospects
         self._career = career
         self._online = online
+        self._builtin, self._game, self._controls = builtin, game, controls
 
     # --- the page -------------------------------------------------------------------------------
     @_safe
@@ -132,6 +134,65 @@ class Api:
     @_safe
     def switch_host(self):
         self._update.switch_host()
+
+    # --- Setup: where the game is (Blueline's RPCS3 / my RPCS3 / the port), Game settings, Controls (0.99.0) --------
+    @_safe
+    def builtin_choose(self, kind):
+        self._builtin.choose(kind)
+
+    @_safe
+    def builtin_setup(self):
+        self._builtin.setup()
+
+    @_safe
+    def builtin_pick_game(self, folder=False):
+        self._builtin.pick_game(bool(folder))
+
+    @_safe
+    def builtin_pick_pup(self):
+        self._builtin.pick_pup()
+
+    @_safe
+    def builtin_pick_folder(self):
+        self._builtin.pick_folder()
+
+    @_safe
+    def builtin_cancel(self):
+        self._builtin.cancel()
+
+    @_safe
+    def builtin_source(self):
+        url = self._builtin.source_url()
+        if url:
+            self._host.open_url(url)
+
+    @_safe
+    def game_set(self, field, value=None):
+        self._game.set(field, value)
+
+    @_safe
+    def game_reset(self):
+        self._game.reset()
+
+    @_safe
+    def controls_mode(self, mode):
+        self._controls.set_mode(mode)
+
+    @_safe
+    def controls_pad(self, pad):
+        self._controls.set_pad(pad)
+
+    @_safe
+    def controls_bind(self, button, name):
+        self._controls.bind(button, name)
+
+    @_safe
+    def controls_mouse(self, on):
+        self._controls.set_mouse_stick(bool(on))
+
+    @_safe
+    def controls_reset(self):
+        self._controls.reset()
 
     @_safe
     def apply_names(self):
@@ -600,6 +661,14 @@ class Api:
     @_safe
     def online_check(self):
         self._online.refresh()
+
+    @_safe
+    def online_use_other_account(self):
+        self._online.use_other_account()
+
+    @_safe
+    def online_open_builtin(self):
+        self._online.open_builtin()
 
     @_safe
     def online_setup(self):

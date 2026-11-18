@@ -516,3 +516,47 @@ input.field:disabled { color: var(--faint); }
 .program .state.good { color: var(--good); }
 .program .state.caution { color: var(--caution); }
 .tick { color: var(--good); font-weight: 800; margin-right: 6px; }
+
+/* --- Setup: where the game runs, Blueline's RPCS3, Game settings, Controls (0.99.0, web/js/standalone.js) ---------- */
+.col.scrolly { overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+.seg.hosts { display: flex; flex-wrap: wrap; margin-bottom: 10px; }
+.seg.hosts button { flex: 1 1 auto; }
+.bl-rows { display: flex; flex-direction: column; gap: 6px; }
+.bl-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 10px; background: var(--row); border: 1px solid var(--line); }
+.bl-row .main { flex: 1; min-width: 0; }
+.bl-row .title { font-size: 14px; font-weight: 600; }
+.bl-row .sub { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.bl-row.bad .sub { color: var(--red); }
+.bl-row.amber .sub { color: var(--amber); }
+.bl-mark { flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--steel-2); font-size: 12px; font-weight: 800; color: var(--good); }
+.bl-row.done .bl-mark { border-color: var(--good); background: var(--good-bg); }
+.bl-acts { margin-top: 6px; gap: 6px; }
+.bl-step { margin-top: 10px; }
+.bl-step .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 5px; }
+.bl-foot { margin-top: 10px; }
+.bl-folder { margin-top: 10px; }
+.bl-folder .field { height: 28px; font-size: 12.5px; }
+.bl-source { margin-top: 4px; }
+.row.wrap { flex-wrap: wrap; }
+.note.amber { color: var(--amber); }
+.gs { display: flex; flex-direction: column; gap: 6px; }
+.gs-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gs-label { width: 92px; flex: none; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.gs-row .seg.tiny button { padding: 2px 11px; }
+.gs-lock { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.gs-lock .lock { display: inline-block; margin-right: 6px; padding: 0 6px; border: 1px solid var(--line); color: var(--text-3); }
+.gs-foot { margin-top: 4px; gap: 10px; }
+.ck { display: flex; flex-direction: column; gap: 10px; }
+.ck-pads { display: flex; flex-direction: column; gap: 8px; }
+.ck-pads .seg { flex-wrap: wrap; }
+.ck-mouse { gap: 10px; font-size: 14px; font-weight: 600; }
+.ck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 4px 18px; }
+.ck-row { display: flex; align-items: center; gap: 8px; }
+.ck-label { flex: 1; min-width: 0; font-size: 13px; color: var(--text-2); }
+.ck-key { flex: none; min-width: 110px; height: 28px; padding: 0 10px; font-family: var(--font); font-size: 13px; font-weight: 700;
+  color: var(--text); background: var(--input); border: 1px solid var(--line); cursor: pointer; }
+.ck-key:hover:not(:disabled) { border-color: var(--line-hi); }
+.ck-key.changed { color: var(--blue-soft); }
+.ck-key.mouse { color: var(--text-3); font-style: italic; }
+.ck-key.wait { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); color: #fff; }

@@ -245,6 +245,9 @@ def main(argv=None, after=None):
     from ..app.prospects import ProspectsController
     from ..app.career import CareerController
     from ..app.online import OnlineController
+    from ..app.builtin import BuiltinController
+    from ..app.gamesettings import GameSettingsController
+    from ..app.controls import ControlsController
     from ..app.season import SeasonSource
     from .api import Api
     from .host import WebHost
@@ -262,6 +265,9 @@ def main(argv=None, after=None):
     career = CareerController(host, editor)          # running Be a Pro careers (saved only on the player's Save)
     prospects = ProspectsController(host, editor, career)
     online = OnlineController(host, update)           # Play online: account, setup, lobby, the game (a follower: works while its tab shows)
+    builtin = BuiltinController(host, update)         # Setup: Blueline's RPCS3 / my RPCS3 / the port (0.99.0)
+    game = GameSettingsController(host, update)       # Setup: Game settings (the config Play boots with)
+    controls = ControlsController(host, update)       # Setup: Controls of Blueline's RPCS3
     editor.follow_with('online', online)
     host.register('update', update.snapshot)
     host.register('editor', editor.snapshot)
@@ -281,7 +287,12 @@ def main(argv=None, after=None):
     host.register('prospects', prospects.snapshot)
     host.register('career', career.snapshot)
     host.register('online', online.snapshot)
-    api = Api(host, update, editor, uniforms, equipment, lines, strategy, calendar, office, prospects, career, online)
+    host.register('emulator', builtin.snapshot)
+    host.register('game', game.snapshot)
+    host.register('controls', controls.snapshot)
+    host.follow('update', ('emulator', 'game', 'controls'))
+    api = Api(host, update, editor, uniforms, equipment, lines, strategy, calendar, office, prospects, career, online,
+              builtin=builtin, game=game, controls=controls)
     width, height, x, y = window_box(webview)
     blank = os.environ.get('LEGACY_ROSTER_FAIL') == 'blank' and not watchdog.retried()          # tools/start_stress.py
     page = 'missing.html' if blank else 'index.html'
@@ -303,7 +314,8 @@ def main(argv=None, after=None):
     update.download_pictures()
     controllers = {'host': host, 'update': update, 'editor': editor, 'uniforms': uniforms, 'equipment': equipment,
                    'lines': lines, 'strategy': strategy, 'calendar': calendar, 'office': office,
-                   'prospects': prospects, 'career': career, 'online': online}
+                   'prospects': prospects, 'career': career, 'online': online, 'builtin': builtin, 'game': game,
+                   'controls': controls}
     fail_on_purpose(webview, host)
     roomy_server()
     web_types()

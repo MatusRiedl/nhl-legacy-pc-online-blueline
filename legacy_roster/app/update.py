@@ -9,7 +9,8 @@ import subprocess
 import threading
 import time
 
-from .. import __version__, datasource, export, gamepatch, layout, native, packs, patchinstall, pipeline, restore, savedata
+from .. import __version__, datasource, export, gamepatch, layout, native, onlinecfg, packs, patchinstall, pipeline, restore
+from .. import rpcs3cfg, rpcs3input, savedata
 from .. import edits as my_edits
 from ..art import install as art_install
 from ..art import parts as P
@@ -535,7 +536,8 @@ class UpdateController:
                 self.settings['rpcs3'] = found.where
                 self.settings.pop('folder', None)
                 if not found.plain:         # the last RPCS3 and the last port, one press apart (Setup's "Switch to")
-                    self.settings.setdefault('hosts', {})['native' if found.native else 'rpcs3'] = found.where
+                    kind = 'native' if found.native else 'builtin' if found.builtin else 'rpcs3'
+                    self.settings.setdefault('hosts', {})[kind] = found.where
                 S.save(self.settings)
             art_install.use_host(found)
             self.art_installed = art_installed()
@@ -1219,9 +1221,10 @@ class UpdateController:
             "Opens NHL Legacy Native's launcher: press PLAY there." if r.native else "Starts NHL Legacy in RPCS3.")}
 
     def _play_command(self, r, slot):
-        """What Play starts: on RPCS3 the game of the picked roster (else the first one RPCS3 has) with the player's own
-        settings (RPCS3 runs update 1.01 by itself); RPCS3 alone when it does not say where the game is; on the port its
-        launcher (its PLAY joins the mods with the update first). None: nothing to start."""
+        """What Play starts: on RPCS3 the game of the picked roster (else the first one RPCS3 has) through the program's
+        own copy of the player's config with their Game settings and the blit fix (rpcs3cfg.write_play: no endless match
+        loading above 100 %; RPCS3 runs update 1.01 by itself); RPCS3 alone when it does not say where the game is; on the
+        port its launcher (its PLAY joins the mods with the update first). None: nothing to start."""
         command = r.command()
         if not command:
             return None
@@ -1232,7 +1235,23 @@ class UpdateController:
         title = getattr(slot, 'title_id', None)
         title = title if title in games else next(iter(games), None)
         disc = r.game_disc(title) if title else None
-        return command + [disc] if disc else command
+        if not disc:
+            return command
+        choices = self.settings.get(S.GAME) or {}
+        if r.builtin:                       # the controls again: on Linux the controller plugged in now is named there
+            try:
+                rpcs3input.write(os.path.dirname(r.exe), self.settings.get(S.CONTROLS))
+            except OSError as err:
+                self.host.log(f"Your controls could not be written ({err}); RPCS3 starts with the last ones.")
+        try:
+            config = rpcs3cfg.write_play(r, title, choices)
+        except OSError as err:              # the program's folder could not be written: play as before
+            self.host.log(f"Your game settings could not be written ({err}); RPCS3 starts with its own.")
+            config = None
+        if config is None:
+            return command + [disc]
+        args = onlinecfg.launch_args(r, title, config, fullscreen=choices.get('fullscreen') is True)
+        return [c for c in args if c != '--args'] if args else command + [disc]
 
     def play(self):
         with self.lock:
@@ -1472,7 +1491,7 @@ class UpdateController:
                           for s in self._fresh(export)],
                 'empty': None if self.slots else ("Looking for your rosters..." if self.scanning else
                                                   "No RPCS3 rosters are listed. Pick RPCS3 in step 1, or use a roster file." if export else
-                                                  "Pick your game first. Your rosters will be listed here."),
+                                                  "Set up your game in step 1. Your rosters will be listed here."),
                 'rosters': [self._roster_view(s, hidden) for s in self.slots],
                 'room': self._room_view(room, export),
                 'selected': self.selected,
@@ -1561,7 +1580,8 @@ class UpdateController:
         native_host = self.rpcs3 is not None and self.rpcs3.native
         return {'path': self.rpcs3.where if self.rpcs3 else None, 'note': {'text': note, 'tone': tone} if note else None,
                 'needs_game': needs_game, 'find_label': "Find your game",
-                'enabled': not self.busy, 'kind': self.rpcs3.name if self.rpcs3 and not self.rpcs3.plain else None,
+                'enabled': not self.busy, 'kind': ("Blueline's RPCS3" if self.rpcs3.builtin else self.rpcs3.name)
+                if self.rpcs3 and not self.rpcs3.plain else None,
                 'native': X.NATIVE_NOTE if native_host else None, 'warnings': native.notes(self.rpcs3) if native_host else [],
                 'other': (self._other_host() or (None,))[0]}
 

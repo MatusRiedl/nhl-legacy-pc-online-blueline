@@ -87,7 +87,8 @@ STATES = ('none', 'setup', 'ready', 'patch', 'updating', 'done', 'details', 'fai
           'calendar', 'office', 'contract', 'downloading', 'misfit', 'prospects', 'prospects-pro', 'prospects-look',
           'prospects-make', 'prospects-class', 'prospects-import', 'prospects-career', 'online', 'online-lobby',
           'online-ready', 'online-ingame', 'online-failed', 'online-mismatch', 'online-list', 'online-you', 'online-chat',
-          'online-board', 'online-result', 'online-stats', 'online-box', 'export-roster', 'heads-up')
+          'online-board', 'online-result', 'online-stats', 'online-box', 'export-roster', 'heads-up', 'builtin',
+          'builtin-setup', 'builtin-ready', 'controls')
 TEAM_STATES = {'roster': 'roster', 'editor': 'roster', 'equipment': 'roster', 'face': 'roster', 'jerseys': 'jerseys',
                'uniforms': 'jerseys', 'lines': 'lines', 'strategy': 'strategy', 'strategies': 'strategy',
                'calendar': 'calendar', 'office': 'office', 'contract': 'office', 'prospects': 'prospects',
@@ -122,6 +123,37 @@ def pretend_rpcs3(folder, disc=None, full=False):
         with open(os.path.join(folder, 'rpcs3', 'config', 'games.yml'), 'w', encoding='utf-8') as f:
             f.write(''.join(f'{t}: "{os.path.abspath(disc)}"\n' for t in savedata.GAMES))
     return exe
+
+
+BUILTIN_STATES = ('builtin', 'builtin-setup', 'builtin-ready', 'controls')
+SHOT_STAMP = {'version': '0.0.43-20607', 'source': 'https://github.com/MatusRiedl/rpcs3/tree/blueline', 'sha256': '0' * 64}
+
+
+def pretend_builtin(folder, disc=None, ready=True):
+    """Blueline's RPCS3 in a folder of its own (`ready`: unpacked, the system software in, the base roster in its saves) and
+    the game picked for it: the --disc, else an empty .iso the game check is told to take. Returns (its folder, the game)."""
+    from legacy_roster import emulator, savedata
+    root = os.path.join(folder, 'Blueline RPCS3')
+    if ready:
+        data = emulator.data_dir(root)
+        shutil.copytree(BASE, os.path.join(data, 'dev_hdd0', 'home', '00000001', 'savedata', os.path.basename(BASE)))
+        open(emulator.exe_path(root), 'wb').close()
+        with open(os.path.join(root, savedata.BUILTIN_STAMP), 'w', encoding='utf-8') as f:
+            json.dump(SHOT_STAMP, f)
+        os.makedirs(os.path.join(data, 'dev_flash', 'vsh', 'etc'))
+        with open(os.path.join(data, 'dev_flash', 'vsh', 'etc', 'version.txt'), 'w', encoding='utf-8') as f:
+            f.write('release:04.9300:\n')
+        os.makedirs(emulator.config_dir(root))      # the keys of the Game settings card as RPCS3 writes them after the setup
+        with open(os.path.join(emulator.config_dir(root), 'config.yml'), 'w', encoding='utf-8') as f:
+            f.write("Video:\n  Renderer: Vulkan\n  Resolution Scale: 100\n  Frame limit: Auto\n  VSync Mode: Disabled\n"
+                    "Audio:\n  Master Volume: 100\nMiscellaneous:\n  Start games in fullscreen mode: true\n")
+        emulator.configure(root)
+    game = disc
+    if not game:
+        game = os.path.join(folder, 'NHL Legacy (Europe).iso')
+        open(game, 'wb').close()
+        emulator.game_problem = lambda path: None if path and os.path.exists(path) else "That file is not there any more."
+    return root, game
 
 
 def pretend_native(folder):
@@ -205,6 +237,17 @@ def drive(args, c, work):
         tab = 'setup'
         if state == 'setup':
             upd.select(os.path.basename(BASE))
+    elif state in BUILTIN_STATES:     # Setup with Blueline's RPCS3: to be set up, being set up, in use (+ the Controls window)
+        tab = 'setup'
+        builtin = c['builtin']
+        builtin.listed = dict(SHOT_STAMP, size=262_000_000)       # the packs server is not asked
+        if state == 'builtin-setup':
+            builtin.busy, builtin.step, builtin.bar = True, "Downloading the PS3 system software...", 0.42
+        if state in ('builtin-ready', 'controls'):
+            upd.select(os.path.basename(BASE))
+        if state == 'controls':
+            c['controls'].set_mode('keyboard')
+        builtin.changed()
     elif state.startswith('online'):
         tab = 'online'
         make_online(c, state)
@@ -521,8 +564,11 @@ def make_career(c):
 
 
 def controllers():
+    from legacy_roster.app.builtin import BuiltinController
     from legacy_roster.app.calendar import CalendarController
     from legacy_roster.app.career import CareerController
+    from legacy_roster.app.controls import ControlsController
+    from legacy_roster.app.gamesettings import GameSettingsController
     from legacy_roster.app.editor import EditorController
     from legacy_roster.app.equipment import EquipmentController
     from legacy_roster.app.lines import LinesController
@@ -546,16 +592,20 @@ def controllers():
     pr = ProspectsController(host, ed, car)
     online = OnlineController(host, upd, autopoll=False)
     ed.follow_with('online', online)
+    builtin, game, controls = BuiltinController(host, upd), GameSettingsController(host, upd), ControlsController(host, upd)
+    host.follow('update', ('emulator', 'game', 'controls'))
     for name, snapshot in (('lines', ln.snapshot), ('strategy', st.snapshot), ('update', upd.snapshot), ('editor', ed.snapshot),
                            ('picture', ed.picture_view), ('face_pics', ed.face_pics_view), ('look_pics', ed.look_pics_view),
                            ('uniforms', uni.snapshot), ('thumbs', uni.thumbs_view),
                            ('equipment', eq.snapshot), ('equip_pics', eq.pics_view), ('rail', ed.rail_view),
                            ('calendar', cal.snapshot), ('office', office.snapshot), ('contract', office.contract_snapshot),
-                           ('prospects', pr.snapshot), ('career', car.snapshot), ('online', online.snapshot)):
+                           ('prospects', pr.snapshot), ('career', car.snapshot), ('online', online.snapshot),
+                           ('emulator', builtin.snapshot), ('game', game.snapshot), ('controls', controls.snapshot)):
         host.register(name, snapshot)
     upd.start_up()
     return host, {'host': host, 'update': upd, 'editor': ed, 'uniforms': uni, 'calendar': cal, 'office': office,
-                  'prospects': pr, 'career': car, 'online': online}
+                  'prospects': pr, 'career': car, 'online': online, 'builtin': builtin, 'game': game,
+                  'controls': controls}
 
 
 # a state whose rows are below the fold: the list of steps scrolled to its end once the page is drawn
@@ -567,6 +617,11 @@ SCROLL_MODAL = ("<script>setInterval(() => { const body = document.querySelector
 # SHOT_OPEN=1: the Photos and logos row opened (its parts shown)
 OPEN_GROUP = ("<script>const opened = setInterval(() => { const a = document.querySelector('.step .arrow:not(.open)'); "
               "if (a) { a.click(); clearInterval(opened); } }, 200);</script>")
+
+
+# state 'controls': the Game settings card's Controls... pressed
+OPEN_CONTROLS = ("<script>const pads = setInterval(() => { const b = [...document.querySelectorAll('button')].find((x) => "
+                 "x.textContent.trim() === 'Controls...'); if (b) { b.click(); clearInterval(pads); } }, 200);</script>")
 
 
 def serve(message, extra=''):
@@ -691,7 +746,16 @@ def main():
         if args.native:
             hosts = {'hosts': {'rpcs3': exe}}
             exe = pretend_native(work)
-        S.load = lambda: {} if args.state == 'none' else {'rpcs3': exe, **hosts}
+        if args.state in BUILTIN_STATES:              # Blueline's RPCS3 (only its folder; the pretend RPCS3 is not offered)
+            from legacy_roster import emulator
+            root, game = pretend_builtin(work, args.disc, ready=args.state in ('builtin-ready', 'controls'))
+            known = {S.EMULATOR_FOLDER: root, 'games': {'BLES02153': game}}
+            if args.state in ('builtin-ready', 'controls'):
+                emulator.set_game(root, 'BLES02153', game)
+                known['rpcs3'] = emulator.exe_path(root)
+            S.load = lambda: dict(known)
+        else:
+            S.load = lambda: {} if args.state == 'none' else {'rpcs3': exe, **hosts}
         S.save = lambda values: None
         savedata.running_rpcs3 = lambda: None         # a running RPCS3 on this PC must not be picked up
         savedata.default_rpcs3 = lambda: None         # nor one in its usual place
@@ -718,7 +782,8 @@ def main():
                 text = text.replace(json.dumps(real)[1:-1], json.dumps(shown)[1:-1])
             message = json.loads(text)
         server, url = serve(message, (SCROLL_MODAL if os.environ.get('SHOT_SCROLL') else '') +
-                            (OPEN_GROUP if os.environ.get('SHOT_OPEN') else ''))
+                            (OPEN_GROUP if os.environ.get('SHOT_OPEN') else '') +
+                            (OPEN_CONTROLS if args.state == 'controls' else ''))
         query = f'&tab={tab}' + ('&details' if details else '')
         if args.browser:
             import webbrowser

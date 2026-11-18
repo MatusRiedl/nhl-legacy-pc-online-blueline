@@ -22,6 +22,9 @@ EXPORT_ONLY, EXPORT_FILE = 'export_only', 'export_file'     # "Export files to a
 EXPORT_PATCH = 'export_patch'   # the export also holds the game patch (32 teams, the year 2026)
 EXPORT_FROM_FILE = 'export_from_file'   # the export starts from the roster file, not from a roster of RPCS3
 SAVE_MODE = 'save_mode'     # IN_PLACE or AS_NEW
+EMULATOR_FOLDER = 'emulator_folder'   # 0.99.0: the built-in RPCS3's folder when the player picked one (emulator.py)
+GAME = 'game'               # 0.99.0: the Game settings card ({field: value}, rpcs3cfg.GAME_KEYS)
+CONTROLS = 'controls'       # 0.99.0: the Controls card (rpcs3input.py)
 IN_PLACE, AS_NEW = 'update', 'new'
 BOTH = "EU + NA"
 

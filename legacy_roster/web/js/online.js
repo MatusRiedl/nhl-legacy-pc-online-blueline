@@ -63,6 +63,10 @@ function Identity({ s }) {
       <${Button} small disabled=${!!s.busy} onClick=${() => call('online_check')}>Check again<//>
     </div>
     ${s.native && html`<${NameField} s=${s}/>`}
+    ${!name && s.builtin && html`<div class="mp-row wrap">
+      ${s.other && html`<${Button} small kind="primary" disabled=${!!s.busy} onClick=${() => call('online_use_other_account')}>Use ${s.other} from my other RPCS3<//>`}
+      <${Button} small disabled=${!!s.busy} onClick=${() => call('online_open_builtin')}>Open Blueline's RPCS3<//>
+    </div>`}
   </div>`;
 }
 

@@ -34,7 +34,7 @@ VERSIONS = ('01.00', '01.01')
 YEARS_LATER = 11                                         # 2015 -> 2026
 YEAR_ENTRY = "NHL Legacy year 2026 (test)"
 PATCH_VERSION = '0.9'                                    # 0.9: the Calendar screen's Home / Away marks
-TEAMS_VERSION = '0.28'                                   # 0.28: stage Z also leaves out the Top Prospects game; 0.27: stage Z (Be a CHL Pro); 0.23: the roster's player rights in six bits, Vegas's too (lab round 42);
+TEAMS_VERSION = '0.29'                                   # 0.29: stage Z also skips the Top Prospects day's rosters (seasons made under 0.27); 0.28: stage Z also leaves out the Top Prospects game; 0.27: stage Z (Be a CHL Pro); 0.23: the roster's player rights in six bits, Vegas's too (lab round 42);
 #                                                          0.24: the same words, the news entry (NEWS_ENTRY) ticked with them;
 #                                                          0.25: the same words, also for update 1.01;
 #                                                          0.26: the year entry 0.9 (the Calendar screen's marks)
@@ -1078,7 +1078,42 @@ STAGE_Z = (
                                        "was a team against itself on 28 January of the draft year)"),
 )
 OTHER_INSTRUCTIONS += (0x28491c,)
-STAGE_Z_CAVES = ()
+# 0.29 (2026-11-16, the same tester's career, lab round 65): a season made under 0.27 already holds the Top Prospects game,
+# and on its day the league runs event 11 (case at 0x29e9a8): 0x3c0edc picks the two Top Prospects rosters and builds a
+# line-up for keys getter(0) + 0 / 1. Without the teams the getter 0x1635b4 gives -16, so the line-ups were made for keys
+# -16 / -15 and 0x3b7b20 (1.01, from 0x1bae30) read a player through a null pointer (0x1baf18, read of 0x80). The event's
+# run is skipped when the getter has no team; a career that holds the teams (made before 0.27) runs it as before.
+TP_EVENT_RUN, TP_TEAM = 0x3c0edc, 0x1635b4
+SKIP_CALLS[TP_TEAM] = "the Top Prospects team (-16: none)"
+SKIP_CALLS[TP_EVENT_RUN] = "the Top Prospects rosters and line-ups"
+
+
+def _tp_cave():
+    code = [(_li(3, 0), "li r3,0"), (_li(4, 0), "li r4,0"), (_li(5, 0), "li r5,0")] + _call(TP_TEAM)
+    code += [(_cmpwi(3, 0), "cmpwi r3,0        a Top Prospects team?"),
+             ('blt:skip', "blt skip          no (a career under 0.27/0.28): skip the event's run"),
+             (_ori(3, 31), "ori r3,r31,0      the game's own: the event")] + _call(TP_EVENT_RUN)
+    code += ['skip', (NOP, "nop")]
+    at, labels, out = 0, {}, []
+    for item in code:
+        if isinstance(item, str):
+            labels[item] = at
+        else:
+            at += 4
+    at = 0
+    for item in code:
+        if isinstance(item, str):
+            continue
+        word, what = item
+        if isinstance(word, str):
+            word = 0x41800000 | (labels[word.split(':')[1]] - at) & 0xfffc
+        out.append((word, what))
+        at += 4
+    return out
+
+
+STAGE_Z_CAVES = ((0x29e9b8, 0x48122525, _tp_cave(),
+                  "Top Prospects day: no rosters for teams a career does not have (bl 0x3c0edc only with a team)"),)
 
 # yearfirstsigned, yearprodebut, yearufa, yearwaivereligible: read against the league's own year, so year_shift leaves
 # them (patch 0.4 moved them 11 later; in Be a GM the game then wrote the league year into every debut year). yearufa is
@@ -1161,8 +1196,8 @@ TEAM_STAGES = (
      "under Custom Teams. Only with a roster made for it and the team names written by the NHL Legacy Roster Updater."),
     ("NHL Legacy 32 teams Z - Be a CHL Pro (test)", STAGE_Z, STAGE_Z_CAVES,
      "A Be a CHL Pro career no longer crashes in its first days or in late January of the pro's draft year. It leaves "
-     "out the Top Prospects teams and their game, so its teams fit the room the game has for them. Only with all other "
-     "32-team entries."),
+     "out the Top Prospects teams and their game, so its teams fit the room the game has for them; a career begun "
+     "under an older patch, whose calendar still holds that game, skips its day. Only with all other 32-team entries."),
 )
 
 

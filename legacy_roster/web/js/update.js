@@ -4,29 +4,35 @@ import { html, cls, useEffect, useRef, useState } from './lib.js';
 import { Button, Toggle, Checkbox, Segmented, Card, PathText, RegionTag, Flag, TextField, Info, Bin } from './ui.js';
 import { call } from './bridge.js';
 import { DiscordButton, KofiButton } from './shell.js';
+import { useSlice } from './store.js';
+import { HostChoice, BuiltinBody, GameCard } from './standalone.js';
 
 const goTo = (tab) => window.dispatchEvent(new CustomEvent('lr-tab', { detail: tab }));
 
 // --- Setup ------------------------------------------------------------------------------------------------
 function RpcsCard({ r, exp, busy }) {
   const note = r.note;
-  return html`<${Card} n="1" title="Where is your game?" aside=${r.kind || ''} style=${{ '--i': 0 }}>
+  const e = useSlice('emulator');
+  const builtin = e && e.shown === 'builtin' && !exp.on;
+  return html`<${Card} n="1" title="Where is your game?" aside=${builtin ? '' : r.kind || ''} style=${{ '--i': 0 }}>
     <div class="card-body">
-      <div class="row">
-        <${PathText} path=${r.path} unset="Not set yet"/>
-        <${Button} kind=${r.path ? 'ghost' : 'primary'} disabled=${!r.enabled} onClick=${() => call('pick_rpcs3')}>
-          ${r.path ? 'Change' : r.find_label}</${Button}>
-      </div>
-      ${r.other && html`<div class="row" style=${{ marginTop: '8px' }}>
-        <${Button} small disabled=${!r.enabled} onClick=${() => call('switch_host')}>Switch to ${r.other}</${Button}>
-      </div>`}
-      ${note && html`<div class=${cls('note', note.tone)}>${note.text}</div>`}
-      ${r.native && html`<div class="note info">${r.native}</div>`}
-      ${r.warnings.map((w) => html`<div key=${w} class="note amber">${w}</div>`)}
-      ${r.needs_game && html`<div class="row" style=${{ marginTop: '10px' }}>
-        <${Button} kind="primary" disabled=${busy} onClick=${() => call('pick_game', false)}>Pick the game (.iso)...</${Button}>
-        <${Button} disabled=${busy} onClick=${() => call('pick_game', true)}>or its folder...</${Button}>
-      </div>`}
+      ${!exp.on && html`<${HostChoice} e=${e}/>`}
+      ${builtin ? html`<${BuiltinBody} e=${e}/>` : html`
+        <div class="row">
+          <${PathText} path=${r.path} unset="Not set yet"/>
+          <${Button} kind=${r.path ? 'ghost' : 'primary'} disabled=${!r.enabled} onClick=${() => call('pick_rpcs3')}>
+            ${r.path ? 'Change' : r.find_label}</${Button}>
+        </div>
+        ${r.other && !(e && e.choices) && html`<div class="row" style=${{ marginTop: '8px' }}>
+          <${Button} small disabled=${!r.enabled} onClick=${() => call('switch_host')}>Switch to ${r.other}</${Button}>
+        </div>`}
+        ${note && html`<div class=${cls('note', note.tone)}>${note.text}</div>`}
+        ${r.native && html`<div class="note info">${r.native}</div>`}
+        ${r.warnings.map((w) => html`<div key=${w} class="note amber">${w}</div>`)}
+        ${r.needs_game && html`<div class="row" style=${{ marginTop: '10px' }}>
+          <${Button} kind="primary" disabled=${busy} onClick=${() => call('pick_game', false)}>Pick the game (.iso)...</${Button}>
+          <${Button} disabled=${busy} onClick=${() => call('pick_game', true)}>or its folder...</${Button}>
+        </div>`}`}
       ${exp.on && exp.game && html`<div class="note muted">${exp.game}</div>`}
       <${Checkbox} on=${exp.on} disabled=${busy} onChange=${(v) => call('set_export_only', v)}>Export files to a folder</${Checkbox}>
       ${exp.on && html`<div class="small-note">The files are made into a new folder and nothing in RPCS3 is changed.
@@ -118,8 +124,9 @@ function RosterCard({ s }) {
 export function SetupTab({ s, version }) {
   if (!s) return null;
   return html`<div class="columns">
-    <div class="col">
+    <div class="col scrolly">
       <${RpcsCard} r=${s.rpcs3} exp=${s.export} busy=${s.busy}/>
+      <${GameCard} busy=${s.busy}/>
       ${s.downloads && html`<${DownloadsCard} items=${s.downloads}/>`}
       <${ProgramCard} s=${s} version=${version}/>
     </div>

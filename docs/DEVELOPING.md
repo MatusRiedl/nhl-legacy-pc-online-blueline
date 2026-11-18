@@ -391,7 +391,10 @@ with a message). `build/` and `dist/` are git-ignored.
   - a new player of the edits ranked by his reused record's old quality (the next run's Builder rates him by his
     attributes): `edits._set_ratings` sets `b.quality` for him;
   - a new player arriving with his reused record's old number and bumping a team-mate (the next run's league step gives
-    the listed number back to the team-mate): without a number of his own he takes a free one (`edits._move(wins=False)`).
+    the listed number back to the team-mate): without a number of his own he takes a free one (`edits._move(wins=False)`);
+  - `b.quality` set from a figure other than the attributes as written: an IIHF estimate clamps attributes to 0..63, so
+    `create_national` sets it from `ratings.level` of the written row (Igor Merezhko at Plzeň, 75.52 vs 75.6, swapped two
+    defencemen in the overtime units; `test_an_estimated_player_counts_at_the_level_his_written_ratings_give`).
 
   `diff2`-style checking helps: build twice, compare every table field by field, and print the
   second run's change log; the rows it still writes name the culprit.

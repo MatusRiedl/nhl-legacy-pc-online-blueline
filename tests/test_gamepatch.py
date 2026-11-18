@@ -120,7 +120,54 @@ def test_a_chl_pros_own_season_calendar_gets_no_top_prospects_game():
     lines = [line.split('#')[0].strip() for line in gamepatch.player_patch_text().splitlines()]
     assert lines.count('- [ be32, 0x0028491c, 0x48000060 ]') == 2                      # EU 1.00 and NA 1.00
     assert lines.count('- [ be32, 0x00285a0c, 0x48000060 ]') == 1                      # 1.01, both titles
-    assert gamepatch.TEAMS_VERSION == '0.28'
+    assert gamepatch.TEAMS_VERSION >= '0.28'
+
+
+def _run_tp(code, team):
+    """Run the Top Prospects day's cave with the team getter answering `team`: the calls it makes, (target, r3, r4, r5)."""
+    reg, calls, at, cr, ctr = {31: 0x7fff00b4}, [], 0, 0, None
+    while at < len(code):
+        word = code[at][0]
+        op, rt, ra, imm = word >> 26, word >> 21 & 31, word >> 16 & 31, word & 0xffff
+        simm = imm - 0x10000 if imm & 0x8000 else imm
+        if op == 14 and not ra:                                   # li
+            reg[rt] = simm
+        elif op == 15 and not ra:                                 # lis
+            reg[rt] = imm << 16
+        elif op == 24:                                            # ori rA,rS,imm
+            reg[ra] = reg.get(rt, 0) | imm
+        elif word == 0x7d8903a6:                                  # mtctr r12
+            ctr = reg[12]
+        elif word == 0x4e800421:                                  # bctrl
+            calls.append((ctr, reg.get(3), reg.get(4), reg.get(5)))
+            reg[3] = team if ctr in (gamepatch.TP_TEAM, gamepatch.at(gamepatch.TP_TEAM, '01.01')) else None
+        elif op == 11:                                            # cmpwi
+            cr = (reg[ra] > simm) - (reg[ra] < simm)
+        elif word >> 16 == 0x4180:                                # blt +n
+            if cr < 0:
+                at += simm // 4
+                continue
+        elif word != gamepatch.NOP:
+            raise AssertionError(hex(word))
+        at += 1
+    return calls
+
+
+def test_the_top_prospects_day_runs_only_with_its_teams():
+    # The same tester's career, begun under 0.27 (docs/notes/crash-1baf18.md, lab round 65): its season already held the Top
+    # Prospects game, and on its day the league built line-ups for keys -16 / -15 (the team getter's "none") and froze. The
+    # cave in place of the game's bl runs the event only when the getter has a team, so Patch again mends a running career.
+    (addr, old, code, _), = gamepatch.STAGE_Z_CAVES
+    assert (addr, old) in gamepatch.hooks() and old == 0x48000001 | (gamepatch.TP_EVENT_RUN - addr)   # the game's bl
+    event = 0x7fff00b4                                                                                # r31: the event
+    assert _run_tp(code, -16) == [(gamepatch.TP_TEAM, 0, 0, 0)]                                       # no teams: skipped
+    assert _run_tp(code, 64) == [(gamepatch.TP_TEAM, 0, 0, 0), (gamepatch.TP_EVENT_RUN, event, 0, 0)]
+    ported = gamepatch.ported_code(code, '01.01')
+    assert [c[0] for c in _run_tp(ported, 64)] == [0x163664, 0x3c23cc] and _run_tp(ported, -16) == [(0x163664, 0, 0, 0)]
+    assert gamepatch.at(addr, '01.01') == 0x29fdd8
+    text = gamepatch.player_patch_text()
+    assert text.count('calloc, 0x0029e9b8,') == 2 and text.count('calloc, 0x0029fdd8,') == 1   # EU / NA 1.00, 1.01
+    assert gamepatch.TEAMS_VERSION == '0.29'
 
 
 def test_only_the_games_own_years_move():
@@ -534,7 +581,7 @@ def test_the_team_lists_skip_switched_off_custom_slots():
     assert _walk(code, 236, own)[:3] == (gamepatch.LIST_END, 252, 0x8000)   # none left: the walk ends
     assert _walk(code, 252, own)[0] == gamepatch.LIST_END
     calls = _walk(code, 222, {222})[3]
-    assert set(calls) == set(gamepatch.SKIP_CALLS) and calls.count(0xdc86a0) == 1
+    assert set(calls) == set(gamepatch.SKIP_CALLS) - {gamepatch.TP_TEAM, gamepatch.TP_EVENT_RUN} and calls.count(0xdc86a0) == 1
     assert calls[-2:] == [0xdc86a0, 0xdc4e84]                     # the result is read, then dropped
 
 
