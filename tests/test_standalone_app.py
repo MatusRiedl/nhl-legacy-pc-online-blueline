@@ -57,6 +57,7 @@ def _quiet(monkeypatch):
     monkeypatch.setattr(S, 'save', lambda settings: None)
     monkeypatch.setattr(savedata, 'running_rpcs3', lambda: None)
     monkeypatch.setattr(emulator, 'room', lambda folder: emulator.NEEDED)
+    monkeypatch.setattr(packs, 'manifest', lambda timeout=None: None)     # never the real server
 
 
 def _pack(tmp_path):
@@ -123,6 +124,17 @@ def test_with_no_game_in_use_the_card_offers_blueline_rpcs3_and_asks_for_the_gam
     assert [r['key'] for r in view['rows']] == ['rpcs3', 'firmware', 'game'] and not any(r['done'] for r in view['rows'])
     assert view['button'] == {'text': "Set up", 'can': False, 'why': "Pick your game first."}
     assert view['can_move'] and view['pup']
+
+
+def test_the_rpcs3_row_says_how_much_it_downloads_from_the_first_start(tmp_path, monkeypatch):
+    monkeypatch.setattr(emulator, 'pack_name', lambda: 'rpcs3-win')
+    monkeypatch.setattr(packs, 'manifest', lambda timeout=None: {'rpcs3-win': {'size': 57 * 1024 ** 2, 'sha256': 'x'}})
+    c = BuiltinController(FakeHost(), FakeUpdate({S.EMULATOR_FOLDER: str(tmp_path / 'rpcs3')}))
+    c.snapshot()                                            # nothing picked yet: the card asks the server once by itself
+    end = time.time() + 10
+    while c.listed is None and time.time() < end:
+        time.sleep(0.05)
+    assert "(about 57 MB)" in c.snapshot()['rows'][0]['text']
 
 
 def test_a_game_that_is_not_nhl_legacy_is_named_and_a_good_one_unlocks_set_up(tmp_path, monkeypatch):

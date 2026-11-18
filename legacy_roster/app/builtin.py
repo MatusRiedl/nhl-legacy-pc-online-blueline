@@ -150,6 +150,8 @@ class BuiltinController:
             folder = self.folder()
             rows = self._rows(folder) if shown == 'builtin' else []
             installed = emulator.installed(folder)
+            if rows and not installed:
+                self._look()                 # the RPCS3 row says how much it downloads (also on the first start)
             ready = bool(rows) and all(r['done'] for r in rows) and rows[0]['tone'] == 'good'
             game_ok = bool(rows) and rows[2]['done']
             if self.busy:

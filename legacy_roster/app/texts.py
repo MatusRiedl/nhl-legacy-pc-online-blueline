@@ -246,6 +246,7 @@ def patch_state(state, old=(), missing=()):
 
 
 SCHEDULE_NOTE = "The real games and dates for Season mode (30 teams; the game still calls the year 2015)"
+SCHEDULE_NOTE_PATCHED = "The real 2026-27 games and dates for Season mode: 32 teams, 84 games each"   # the game patched
 NHL_NOTE = "Today's rosters from NHL.com"
 MISSING_FILES = ("Some of this program's files are missing from the system's temporary folder. An antivirus "
                  "or a cleaning program may have removed them.\n\n"

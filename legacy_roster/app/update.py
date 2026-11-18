@@ -1719,7 +1719,7 @@ class UpdateController:
         notes = {pipeline.NHL: X.NHL_NOTE,
                  pipeline.RATINGS: X.dated(sources.get('ratings_list')),
                  pipeline.NATIONAL: X.dated(sources.get('iihf')),
-                 pipeline.SCHEDULE: X.SCHEDULE_NOTE}
+                 pipeline.SCHEDULE: X.SCHEDULE_NOTE_PATCHED if self._patched() and not export else X.SCHEDULE_NOTE}
         restorable = not export and not self.busy and not self.scanning
         rows = [{'key': k, 'title': pipeline.STEP_LABELS[k], 'sub': notes.get(k) or X.dated(sources.get(k)),
                  'warn': pipeline.left_out_note(self.pack, k), 'hint': None, 'on': self.steps[k],
