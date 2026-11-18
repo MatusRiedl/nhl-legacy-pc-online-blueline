@@ -86,7 +86,7 @@ Its COORDINATION.md is imported through the git-ignored CLAUDE.md. Never put its
    freely; the player's own RPCS3 is still only read (Play and Online boot it with Blueline's copy of its config).
 6. **No git commit or push, and nothing published, without the owner's explicit go-ahead.**
    The project is public at https://github.com/MatusRiedl/nhl-legacy-pc-online-blueline (0.6.0
-   and 0.7.0 released on 2026-10-04, 0.8.0 on 2026-10-05, 0.8.1 on 2026-10-06, 0.50.0 to 0.50.3 on 2026-10-23, 0.50.4 to 0.51.2 on 2026-10-24, 0.52.0 on 2026-10-25, 0.80.0 and 0.80.1 on 2026-10-27, 0.90.0 on 2026-10-29, 0.91.0 on 2026-10-30, 0.92.0 on 2026-11-01, 0.95.0 and 0.95.1 on 2026-11-03, 0.95.2 on 2026-11-04, 0.96.0 on 2026-11-05, 0.97.0 on 2026-11-09, 0.97.1 on 2026-11-10, 0.98.0 and 0.98.1 on 2026-11-13, 0.98.3 on 2026-11-16 (carrying 0.98.2), each with the owner's go-ahead). Every further commit,
+   and 0.7.0 released on 2026-10-04, 0.8.0 on 2026-10-05, 0.8.1 on 2026-10-06, 0.50.0 to 0.50.3 on 2026-10-23, 0.50.4 to 0.51.2 on 2026-10-24, 0.52.0 on 2026-10-25, 0.80.0 and 0.80.1 on 2026-10-27, 0.90.0 on 2026-10-29, 0.91.0 on 2026-10-30, 0.92.0 on 2026-11-01, 0.95.0 and 0.95.1 on 2026-11-03, 0.95.2 on 2026-11-04, 0.96.0 on 2026-11-05, 0.97.0 on 2026-11-09, 0.97.1 on 2026-11-10, 0.98.0 and 0.98.1 on 2026-11-13, 0.98.3 on 2026-11-16 (carrying 0.98.2), 0.99.0 on 2026-11-18, each with the owner's go-ahead). Every further commit,
    push or release needs the go-ahead again. Before pushing, check that no base roster (`work/`),
    picture pack (`private/packs/`, a zip in `legacy_roster/data/`), anything from `private/`, personal path or user name
    goes in, and that `python tools/clean_check.py` finds nothing.
@@ -237,7 +237,7 @@ wording (`progress.py`).
 
 ## Current state
 
-**Version 0.99.0 (2026-11-18, committed locally 75304cd / b425e82 / 073517f / dd4c9b7 / 6753658, built from 6753658 (exe e222863e, Linux d197e37d, Ubuntu / Fedora / Arch PASS); pack `portpatch` 0.29 published 2026-11-18 before the app (owner's go), the app not released; plan docs/plans/gentle-soaring-fiddle.md, notes
+**Version 0.99.0 (2026-11-18, RELEASED the same day with the owner's go-ahead ("release 0.99"): tag `v0.99.0` on 47eb143, built from 6753658 (exe e222863e, Linux d197e37d, Ubuntu / Fedora / Arch PASS), GitHub release with `BluelineLegacy.exe`, the same file as `PuckPeakLegacyUpdater.exe`, the Linux tar.gz and `SHA256SUMS.txt`; packs `portpatch` 0.29 (15:25 UTC) and `rpcs3-win` / `rpcs3-linux` (the 2edb9ca5 build, with RPCS3's start-up box) published the same day; plan docs/plans/gentle-soaring-fiddle.md, notes
 docs/notes/standalone.md, goal-light.md, PLAN.md top):** Blueline standalone (owner: "the same as with NHL 19 Overtime app"). Setup's
 "Where is your game?" offers Blueline's RPCS3 (recommended), My RPCS3, NHL Legacy Native. Blueline's RPCS3 = our fork's GitHub build
 (`MatusRiedl/rpcs3` branch `blueline`, 0.0.43-20607, commit 2edb9ca5) with the goal light fix, downloaded as pack `rpcs3-win` /
