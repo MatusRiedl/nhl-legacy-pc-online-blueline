@@ -16,7 +16,7 @@ from . import schema
 from . import ratings
 from .donors import Donors, real_birth_year
 from .faces import RESERVED
-from .matching import match, norm, same_first_name
+from .matching import closest, match, norm, same_first_name
 
 
 class ChangeLog(list):
@@ -833,6 +833,13 @@ class Builder:
     NHL_KEEP_ROOM = 30      # contract_keeps: an NHL team keeps players under contract while it holds fewer (NHL.com: 23-27)
     FARM_KEEP_ROOM = 34     # contract_strays: a farm club takes players under contract while it holds fewer (the game: 40)
 
+    def deals(self):
+        """The data pack's contracts matched to this roster's records the way verify matches them (matching.closest): a
+        'last+year' match gives up a record another deal matches more closely. Aku Räty (2001, Edmonton) and Aatu Räty
+        (2002, Vancouver) with only Aatu's record here: the builder gave Aatu Edmonton's deal and verify refused the save
+        ("still on EDM", NHL.com's rosters of 2026-11-18)."""
+        return closest(match(self.R, [dict(d, birth=tuple(d['birth'])) for d in self.data.contracts]))
+
     def contract_keeps(self, api):
         """Who stays with (or goes to) his NHL organisation because he holds an NHL contract for 2026-27 (data pack
         `contracts`; owner, 2026-10-16: "your choice"): {pid: NHL slot}. Only players whom NHL.com's rosters and the
@@ -847,7 +854,7 @@ class Builder:
             return {}
         R, U, P = self.R, self.U, self.P
         held, listed = {}, set()
-        for d in match(R, [dict(d, birth=tuple(d['birth'])) for d in self.data.contracts]):
+        for d in self.deals():
             if d['row'] is not None and d['org'] in L.API_TO_SLOT:
                 held.setdefault(P.get(d['row'], 'zIBw'), (d['row'], L.API_TO_SLOT[d['org']]))
                 if (norm(d['first']), norm(d['last'])) in self.league_names:
@@ -897,7 +904,7 @@ class Builder:
         live = self.live_entries()
         joined = {}
         seen = set()
-        for d in sorted(match(R, [dict(d, birth=tuple(d['birth'])) for d in self.data.contracts]),
+        for d in sorted(self.deals(),
                         key=lambda d: (P.get(d['row'], 'zIBw') if d['row'] is not None else -1)):
             prow = d['row']
             if prow is None or d['org'] not in L.API_TO_SLOT:
@@ -1289,9 +1296,10 @@ class Builder:
     def fill_real_gaps(self, team, key):
         """`key` ({slot name: player row}) holds the real lines' players found on the club. A group that lacks some of them
         (a database older than the club's list, a player now in the NHL) is completed when at most GAP_SHARE of its slots
-        are open: each open slot goes to the player who holds it now, else to the club's best player of that kind (goalie,
-        defenceman, forward) not yet in the group; a group with more gone is dropped from `key` (the deal stays)."""
-        slots, _letters = lines.lineup(self, team)
+        are open: each open slot goes to the club's best player of that kind (goalie, defenceman, forward) not yet in the
+        group; a group with more gone is dropped from `key` (the deal stays). Never to the player who holds the slot now:
+        that is the last run's pick on a second run, so a second build differed (Texas Stars' pp4 / pk4, data pack of
+        2026-11-18)."""
         ents = self.entries_on(team)
         kind = {e: {4: 'G', 3: 'D'}.get(self.P.get(self.prow_of_entry(e), 'aljv'), 'F') for e in ents}
         kind_of = {self.prow_of_entry(e): kind[e] for e in ents}
@@ -1311,11 +1319,8 @@ class Builder:
             used = {key[n] for n in got}
             for n in open_:
                 want = 'G' if n.startswith('g') else 'D' if n.endswith(('ld', 'rd')) else 'F'
-                now = slots.get(n)
-                pick = now if now is not None and self.prow_of_entry(now) not in used and kind.get(now) == want else None
-                if pick is None:
-                    pick = next((e for e in sorted(ents, key=lambda e: (-self.q(e), self.pid_of_entry(e), e))
-                                 if kind[e] == want and self.prow_of_entry(e) not in used), None)
+                pick = next((e for e in sorted(ents, key=lambda e: (-self.q(e), self.pid_of_entry(e), e))
+                             if kind[e] == want and self.prow_of_entry(e) not in used), None)
                 if pick is None:
                     break
                 key[n] = self.prow_of_entry(pick)
@@ -3028,7 +3033,7 @@ class Builder:
         P, R = self.P, self.R
         on = self.club_teams(pay.contract_clubs(R))
         stats, done = Counter(), set()
-        people = match(R, [dict(d, birth=tuple(d['birth'])) for d in self.data.contracts])
+        people = self.deals()
         for d in people:
             prow = d['row']
             if prow is None:

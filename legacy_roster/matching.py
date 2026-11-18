@@ -95,7 +95,8 @@ def match(R, people):
 def closest(people):
     """`people` as match() left them, without the 'last+year' matches of a record another of them matches more closely:
     The full ratings have Aku Räty (2001, Edmonton) and Aatu Räty (2002, Vancouver); with only Aatu's record in the roster both took
-    it, and verify read Aatu's deal as Edmonton's. Used by verify only (the builder's picks stay as they are)."""
+    it, and verify read Aatu's deal as Edmonton's. Used by verify and the builder's contract steps (`Builder.deals`); match()
+    itself stays as it is (doing this inside it broke the byte-identical second runs)."""
     strong = {p['row'] for p in people if p['row'] is not None and p['how'] != 'last+year'}
     for p in people:
         if p['how'] == 'last+year' and p['row'] in strong:

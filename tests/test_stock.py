@@ -129,15 +129,20 @@ def _rows(R, first, last):
 
 def test_retired_stars_go_and_unsigned_veterans_stay(stock_built):
     """Testers, 0.7.0: Datsyuk, Price and Rask (on 2014's national teams) stayed free agents, and our
-    own rule retired Reimer, who played last season."""
-    res, _ = stock_built
+    own rule retired Reimer, who played last season. Every unsigned player of last season under UNSIGNED_RETIRE_AGE stays
+    (Reimer turned 38 and left the Rangers' list on 2026-11-18: he retires now, as the 0.90.0 rule says)."""
+    from legacy_roster.builder import UNSIGNED_RETIRE_AGE
+    res, data = stock_built
     R = Roster(res.data)
     fa = {R.link_to_pid.get(R.Q.get(k, 'TWSX')) for k in range(R.Q.cur_rec)}
     for first, last in (('Pavel', 'Datsyuk'), ('Carey', 'Price'), ('Tuukka', 'Rask'),
                         ('Jonathan', 'Toews'), ('Jonathan', 'Quick')):      # unsigned at 38+ (0.90.0)
         for r in _rows(R, first, last):
             assert R.P.get(r, 'game_id') not in fa and not R.teams_of(r), last
-    for first, last in (('James', 'Reimer'),):
+    unsigned = [(p['first'], p['last']) for p in data.nhl_last if not p.get('team')
+                and p['birth'][0] > data.season_year - UNSIGNED_RETIRE_AGE and _rows(R, p['first'], p['last'])]
+    assert unsigned
+    for first, last in unsigned:
         assert any(R.P.get(r, 'game_id') in fa or R.teams_of(r) for r in _rows(R, first, last)), last     # not retired (a club may have signed him since)
 
 

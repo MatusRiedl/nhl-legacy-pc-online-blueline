@@ -173,9 +173,12 @@ def test_players_under_contract_whom_nhl_com_leaves_out_stay_with_their_team(bui
 
 
 def test_prospects_under_contract_on_no_club_join_their_organisations_farm_club(built):
+    """A two-way deal goes to the farm club first; a one-way deal goes there when its NHL roster is full (contract_strays:
+    Andrae's one-way Toronto deal went to the Marlies with the rosters of 2026-11-18). Either way he plays on his own deal."""
     from legacy_roster.leagues.clubs import affiliates
     R, b = Roster(built.data), built.builder
     parents = affiliates(R)
+    deal = {d['row']: d for d in b.deals() if d['row'] is not None}
     farm = {pid: t for pid, t in b.contract_kept.items() if t in L.AHL}
     logged = {row[2] for row in b.log if row[1] == 'farm under contract'}
     assert farm and len(logged) == len(farm)
@@ -184,7 +187,7 @@ def test_prospects_under_contract_on_no_club_join_their_organisations_farm_club(
         assert team in {t for _, t in R.teams_of(prow)} and R.name(prow) in logged
         rights = parents[team] + 1 if pay.holds_rights(R.P, parents[team]) else 0   # Seattle's: nobody's (unpatched)
         assert R.P.get(prow, 'WBbd') == rights and R.P.get(prow, 'BSXd') == team + 1         # his rights, his club
-        assert R.P.get(prow, 'DVoL') == 1 and R.P.get(prow, 'dhKk')                             # his two-way deal
+        assert R.P.get(prow, 'DVoL') == int(bool(deal[prow]['two_way'])) and R.P.get(prow, 'dhKk')    # his own deal
     assert ' to their farm club (under contract)' in dict(built.lines())[pipeline.SECTION_NHL]
 
 
@@ -260,3 +263,29 @@ def test_verify_names_a_club_deal_that_cannot_be(built):
     R.P.set(club, 'dhKk', pay.units(pay.MAXIMUM, pay.GAME) + 5)
     found = pay.problems(R, source, pay.GAME)
     assert len(found) == 1 and R.name(club) in found[0] and 'a cap hit of' in found[0]
+
+
+def test_the_builder_matches_deals_as_verify_does_so_a_namesakes_deal_never_takes_a_record(built, data, monkeypatch):
+    """Aku Räty (2001, Edmonton) and Aatu Räty (2002, Vancouver) with only Aatu's record in the roster: the builder gave
+    Aatu Edmonton's deal and verify refused the save ("still on EDM", NHL.com's rosters of 2026-11-18). A deal that only
+    matches by last name + birth year leaves a record another deal matches by birthdate alone."""
+    from legacy_roster.matching import match
+    b = built.builder
+
+    def pair(own):
+        other = next(org for org in sorted(L.API_TO_SLOT) if org != own['org'])
+        deals = [dict(own, birth=list(own['birth'])),
+                 dict(own, first=own['first'][0] + 'qxzv', birth=[own['birth'][0] + 1, 1, 1], org=other)]
+        for d in deals:
+            d.pop('row', None), d.pop('how', None)
+        return deals
+
+    def trapped(deals):        # match() alone gives the namesake the same record by last name + birth year
+        plain = match(b.R, [dict(d, birth=tuple(d['birth'])) for d in deals])
+        return plain[0]['how'] == 'birth' and plain[1]['how'] == 'last+year' and plain[1]['row'] == plain[0]['row']
+    own = next(d for d in match(b.R, [dict(d, birth=tuple(d['birth'])) for d in data.contracts])
+               if d['row'] is not None and d['how'] == 'birth' and trapped(pair(d)))
+    deals = pair(own)
+    monkeypatch.setattr(b.data, 'contracts', deals)
+    got = b.deals()
+    assert got[0]['row'] == own['row'] and got[1]['row'] is None

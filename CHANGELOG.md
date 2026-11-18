@@ -3,7 +3,7 @@
 What changed in each version, for players. Developers: details in [AGENTS.md](AGENTS.md)
 ("Current state") and [docs/ROADMAP.md](docs/ROADMAP.md).
 
-## 0.99.0 (2026-11-16)
+## 0.99.0 (2026-11-18)
 
 **Play with Blueline: no RPCS3 of your own needed.** In Setup, "Where is your game?" has a new first choice, **Play with
 Blueline**. Pick your game's ISO and press **Set up**: Blueline downloads its own RPCS3 made for NHL Legacy and Sony's PS3 system
@@ -30,7 +30,13 @@ after it, but a career whose draft-year season was made before still froze on 28
 patch (0.29) now skips that day when its teams are not there, so such a career simply plays on. Open Blueline and press
 Patch again on the Game patch tab (on NHL Legacy Native too). Online, both players need 0.99.0.
 
-A second update in a row no longer swaps two defencemen in a club's overtime units.
+A second update in a row no longer swaps two defencemen in a club's overtime units, and a club whose real lines miss a
+player fills the gap the same way every time (a second update changed some power play and penalty kill units).
+
+Two players with the same last name and close birthdays (Aku and Aatu Räty) no longer share one contract: the one in the
+game keeps his own deal. With some days' rosters this stopped an update at the last check.
+
+Rosters and lines refreshed (18 Nov 2026).
 
 Also in this version: everything of 0.98.3 and 0.98.2 (below).
 

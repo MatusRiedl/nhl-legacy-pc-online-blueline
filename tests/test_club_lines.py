@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from legacy_roster import pipeline, schema
+from legacy_roster import lines, pipeline, schema
 from legacy_roster.builder import Data
 from legacy_roster.matching import norm
 from legacy_roster.roster import Roster
@@ -142,3 +142,23 @@ def test_a_group_with_a_few_players_gone_is_completed_and_one_with_many_gone_is_
     b.fill_real_gaps(slot, key)
     assert 'g1' not in key and 'g2' not in key
     assert all(n in key for n in schema.POWER_PLAY) and len({key[n] for n in schema.POWER_PLAY}) == len(schema.POWER_PLAY)
+
+
+def test_an_open_place_goes_to_the_clubs_best_and_never_to_whoever_holds_it_now(clubbed, pack, monkeypatch):
+    """On a second build the holder of an open place is the first build's own pick, so taking him made the second build
+    differ (Texas Stars' pp4 / pk4, data pack of 2026-11-18). The club's best of that kind not yet in the group takes it."""
+    full, result = clubbed
+    b = result.builder
+    slot = next(s for s in b.club_lined if str(s) in pack['club_lines'])
+    ents = b.entries_on(slot)
+    kind = {e: {4: 'G', 3: 'D'}.get(b.P.get(b.prow_of_entry(e), 'aljv'), 'F') for e in ents}
+    best = sorted(ents, key=lambda e: (-b.q(e), b.pid_of_entry(e), e))
+    forwards = [e for e in best if kind[e] == 'F']
+    defence = [e for e in best if kind[e] == 'D']
+    assert len(forwards) >= 9 and len(defence) >= 2
+    key = {n: b.prow_of_entry(forwards[k]) for k, n in enumerate(schema.POWER_PLAY[:7])}   # pp2rw, pp2ld, pp2rd open
+    weakest = forwards[-1]
+    monkeypatch.setattr(lines, 'lineup', lambda *a, **k: ({n: weakest for n in schema.SLOT_TAG}, {}))
+    b.fill_real_gaps(slot, key)
+    assert key['pp2rw'] == b.prow_of_entry(forwards[7]) != b.prow_of_entry(weakest)
+    assert (key['pp2ld'], key['pp2rd']) == (b.prow_of_entry(defence[0]), b.prow_of_entry(defence[1]))
