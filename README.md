@@ -405,7 +405,9 @@ On the Setup tab, **Play with Blueline** is the first choice under "Where is you
    checks it (or pick a `PS3UPDAT.PUP` you have).
 3. **Your game.** Pick the ISO of your NHL Legacy disc (EU or NA; a decrypted ISO, as RPCS3 needs) or the game's folder.
 
-**Set up** does whatever is missing. Then **Play NHL Legacy** starts the game straight away, with no RPCS3 window first.
+**Set up** does whatever is missing. Then **Play NHL Legacy** starts the game straight away. Behind the game RPCS3 may
+open a small box, "Experimental Build Warning" (this copy is not RPCS3's own release): press **Yes**, or just leave it.
+**No** closes the game.
 Your rosters, the game patch, the pictures and online play all work with this copy as with any RPCS3.
 
 **Game settings** (Setup): resolution (720p to 4K), fullscreen or window, frame limit, VSync and volume. Above 100 % Blueline
