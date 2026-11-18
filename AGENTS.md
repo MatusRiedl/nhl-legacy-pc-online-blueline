@@ -237,7 +237,7 @@ wording (`progress.py`).
 
 ## Current state
 
-**Version 0.99.0 (2026-11-18, committed locally 75304cd / b425e82 / 073517f / dd4c9b7 / 6753658, built from 6753658 (exe e222863e, Linux d197e37d, Ubuntu / Fedora / Arch PASS), nothing published; plan docs/plans/gentle-soaring-fiddle.md, notes
+**Version 0.99.0 (2026-11-18, committed locally 75304cd / b425e82 / 073517f / dd4c9b7 / 6753658, built from 6753658 (exe e222863e, Linux d197e37d, Ubuntu / Fedora / Arch PASS); pack `portpatch` 0.29 published 2026-11-18 before the app (owner's go), the app not released; plan docs/plans/gentle-soaring-fiddle.md, notes
 docs/notes/standalone.md, goal-light.md, PLAN.md top):** Blueline standalone (owner: "the same as with NHL 19 Overtime app"). Setup's
 "Where is your game?" offers Blueline's RPCS3 (recommended), My RPCS3, NHL Legacy Native. Blueline's RPCS3 = our fork's GitHub build
 (`MatusRiedl/rpcs3` branch `blueline`, 0.0.43-20607, commit 2edb9ca5) with the goal light fix, downloaded as pack `rpcs3-win` /
@@ -274,7 +274,8 @@ made again, `audit_patch.py` 0 on EU 1.00, NA 1.00, 1.01. Played in the lab by t
 past 28 January into March; a fresh 0.29 roster and a new Be a Pro with the Entry Draft start. Not played on the port. The tester
 has the patch files by hand (`private/tester_careers/2026-11-15-1baf18/handover/patch-0.29`). Test
 `test_gamepatch.py::test_the_top_prospects_day_runs_only_with_its_teams`. Port DLL 0.29 built for 1.0.0 / 1.0.1 / 1.0.2 (176 hooks,
-one more swapped function `func_0029FAE4`), pack `private/packs/portpatch.zip` 0.29, not published (only with 0.99.0).
+one more swapped function `func_0029FAE4`), pack `private/packs/portpatch.zip` 0.29, **published 2026-11-18** (`portpatch-2f3159be9ab2.zip`, owner: "Publish patch 0.29") before the
+app: until 0.99.0 is out a 0.98.3 port player who presses Patch keeps an amber "Patch again" and the online word "0.29 exact".
 **Second build (2026-11-18):** with the server's lines a second build swapped Plzeň's overtime defencemen: `create_national` kept the
 IIHF estimate's own level, the next run read the clamped attributes (`b.quality` from `ratings.level` now;
 `test_pipeline.py::test_an_estimated_player_counts_at_the_level_his_written_ratings_give`). The data pack of 2026-11-18 (073517f)
