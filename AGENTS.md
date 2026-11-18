@@ -237,7 +237,7 @@ wording (`progress.py`).
 
 ## Current state
 
-**Version 0.99.0 (2026-11-18, committed locally 75304cd / b425e82 / 073517f, nothing published; plan docs/plans/gentle-soaring-fiddle.md, notes
+**Version 0.99.0 (2026-11-18, committed locally 75304cd / b425e82 / 073517f / dd4c9b7 / 6753658, built from 6753658 (exe e222863e, Linux d197e37d, Ubuntu / Fedora / Arch PASS), nothing published; plan docs/plans/gentle-soaring-fiddle.md, notes
 docs/notes/standalone.md, goal-light.md, PLAN.md top):** Blueline standalone (owner: "the same as with NHL 19 Overtime app"). Setup's
 "Where is your game?" offers Blueline's RPCS3 (recommended), My RPCS3, NHL Legacy Native. Blueline's RPCS3 = our fork's GitHub build
 (`MatusRiedl/rpcs3` branch `blueline`, 0.0.43-20607, commit 2edb9ca5) with the goal light fix, downloaded as pack `rpcs3-win` /
