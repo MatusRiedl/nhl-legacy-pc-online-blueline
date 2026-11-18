@@ -33,6 +33,9 @@ Patch again on the Game patch tab (on NHL Legacy Native too). Online, both playe
 A second update in a row no longer swaps two defencemen in a club's overtime units, and a club whose real lines miss a
 player fills the gap the same way every time (a second update changed some power play and penalty kill units).
 
+Real lines where one defenceman plays on both power play units (as Minnesota uses Quinn Hughes) are now played as they are,
+the way the game's own roster does it. Before, such a team kept its old lines.
+
 Two players with the same last name and close birthdays (Aku and Aatu Räty) no longer share one contract: the one in the
 game keeps his own deal. With some days' rosters this stopped an update at the last check.
 

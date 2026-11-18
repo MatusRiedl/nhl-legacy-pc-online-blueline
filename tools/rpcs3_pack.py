@@ -28,7 +28,10 @@ sys.path.insert(0, ROOT)
 from legacy_roster import emulator, savedata  # noqa: E402
 
 PATCHES = ["Goal light: the vertex program's RSQ of 0 gives +infinity "
-           "(rpcs3/Emu/RSX/Program/VertexProgramDecompiler.cpp), so the goal lamp shows."]
+           "(rpcs3/Emu/RSX/Program/VertexProgramDecompiler.cpp), so the goal lamp shows.",
+           "Started with --no-gui, no start-up windows: the experimental build warning goes to the log only and the "
+           "welcome window is not shown (rpcs3/rpcs3qt/gui_application.cpp; fork commit 20dd299)."]
+# A build made before 20dd299 (0.0.43-20607, 2edb9ca5) has only the first change.
 # what a build folder may hold that is not the program: left out of the pack
 LEFT_OUT = {savedata.PORTABLE, 'config', 'log', 'cache', 'dev_hdd0', 'dev_hdd1', 'dev_flash', 'dev_flash2', 'dev_flash3',
             'dev_usb000', 'dev_bdvd', 'games', 'shaderlog', 'savestates', 'captures', 'screenshots', 'test',

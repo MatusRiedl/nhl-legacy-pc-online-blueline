@@ -1337,9 +1337,10 @@ class Builder:
         new, applied = dict(slots), 0
         for _group, names in lines.GROUPS:
             got = {n: entry_of.get(rows.get(wanted.get(n))) for n in names}
-            if all(e is not None for e in got.values()) and len(set(got.values())) == len(got):
-                new.update(got)
-                applied += 1
+            if any(e is None for e in got.values()) or not lines.once_per_unit(got):
+                continue
+            new.update(got)
+            applied += 1
         if not applied:
             return ['no group of the real lines has all its players on the team']
         for slot in new:                                   # a defence pair: the right shot on the right
@@ -1363,7 +1364,7 @@ class Builder:
         kinds = {0: 'C', 1: 'L', 2: 'R', 3: 'D', 4: 'G'}
         pos = {e: kinds[self.P.get(self.prow_of_entry(e), 'aljv')] for e in ents}
         names = {e: self.R.name(self.prow_of_entry(e)) for e in ents}
-        problems = lines.check_lineup(new, letters, pos, names, nhl=team in L.NHL_PRIMARY)
+        problems = lines.check_lineup(new, letters, pos, names, nhl=team in L.NHL_PRIMARY, units=True)
         if not problems:
             lines.set_lineup(self, team, new, letters)
         return problems

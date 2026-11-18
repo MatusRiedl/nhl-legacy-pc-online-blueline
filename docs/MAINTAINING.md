@@ -272,17 +272,22 @@ the browser.
 "Play with Blueline" downloads RPCS3 as the pack `rpcs3-win` (the 7z's files) or `rpcs3-linux` (the AppImage), made from our fork
 (notes docs/notes/standalone.md, goal light docs/notes/goal-light.md).
 
-- **The fork:** `MatusRiedl/rpcs3`, branch `blueline` = RPCS3 master + one change, the goal light line in
-  `rpcs3/Emu/RSX/Program/VertexProgramDecompiler.cpp` (`RSX_SCA_OPCODE_RSQ`: `abs(x) == 0` gives +infinity). Never push the
-  owner's `RPCS3 Goal Light Patch.zip` anywhere; the branch has the change as a normal commit.
+- **The fork:** `MatusRiedl/rpcs3`, branch `blueline` = RPCS3 master + two changes (`rpcs3_pack.PATCHES` names them in the pack):
+  the goal light line in `rpcs3/Emu/RSX/Program/VertexProgramDecompiler.cpp` (`RSX_SCA_OPCODE_RSQ`: `abs(x) == 0` gives +infinity),
+  and in `rpcs3/rpcs3qt/gui_application.cpp` no start-up windows under `--no-gui` (commit 20dd299): RPCS3 shows every build that is not
+  its own an "Experimental Build Warning" with No as the default (No quits), and on a fresh folder the welcome window (closing it quits
+  too); Blueline starts RPCS3 with `--no-gui`, so the warning goes to the log only. RPCS3's own window still asks. Never let the build
+  call itself `RPCS3/rpcs3/master` to hide the box. Never push the owner's `RPCS3 Goal Light Patch.zip` anywhere; the branch has the
+  changes as normal commits. A rebase keeps both commits.
 - **A new build** (RPCS3 moved on, RPCN refuses old builds, a tester's crash fixed upstream): rebase `blueline` on RPCS3's master,
   push it, start the workflow by hand (Actions > "Build RPCS3" > Run workflow on `blueline`, or the API's `workflow_dispatch`),
   download both artifacts (they need a GitHub login), then make the packs:
   `python tools/rpcs3_pack.py <unpacked 7z folder> --version <0.0.43-NNNNN> --commit <sha> --source https://github.com/MatusRiedl/rpcs3/tree/blueline`
   and the same with the `.AppImage` plus `--license <the fork's LICENSE>`. Both land in `private/packs/`. The version is the build's
   own (its window title shows `0.0.43-<commit>`; the 7z's name and the workflow log have the number).
-- **Before publishing a new build:** boot the EU ISO in a lab folder with it, play a match to a goal (the lamp lights), and load
-  a match at 300 % (blit). The Linux pack: unpack it in a box and run `rpcs3.AppImage --version`.
+- **Before publishing a new build:** boot the EU ISO in a lab folder with it through Blueline's Play (no window but the game's:
+  list the RPCS3 process's windows; RPCS3.log has "Experimental Build Warning! Build origin: MatusRiedl/rpcs3/blueline"), play a match
+  to a goal (the lamp lights), and load a match at 300 % (blit). The Linux pack: unpack it in a box and run `rpcs3.AppImage --version`.
 - **Publish** with the owner's go: `python tools/publish_packs.py <host>:<folder> --only rpcs3-win,rpcs3-linux --dry-run`, then for
   real. Players who have Blueline's RPCS3 see "A newer build is ready: press Set up" (the stamp's sha256 differs from the
   manifest's); Set up replaces the program and keeps `portable/` (their settings, saves, firmware, caches).

@@ -254,6 +254,17 @@ the config copy on a player's own RPCS3 (main menu + a match at 300 %, its confi
 1.0.2 by the window's Patch again over 0.98.3's 0.28 (176 swaps, a new Be a CHL Pro career simmed 19 games to 13 Nov). Not seen: online with the built-in
 RPCS3, Set up on Linux, the mouse on the right stick, four matches in a row at 300 %. The release waits for the owner (packs, push, tag:
 pack and app go out together; it carries 0.98.3, 0.98.2 and patch 0.29).
+**RPCS3's "Experimental Build Warning" (2026-11-18, the exe smoke test; standalone.md):** the fork's build is not RPCS3's own, so RPCS3
+opens a Yes / No box at every start (`gui_application::exec`), also under `--no-gui`; it sat behind the game window on the owner's PC (the
+release checks ran with it open and unanswered), and No quits RPCS3. With the owner's yes the fork's commit **20dd299** (on 2edb9ca5) skips
+the box and the welcome window under `--no-gui` (the log keeps the warning line; RPCS3's own window still asks; the build's origin is unchanged,
+never `RPCS3/rpcs3/master`). Pushed; **not built**: GitHub refuses the workflow ("Actions has been disabled for this repository", although
+the fork's Actions setting says on). Built, it needs new packs `rpcs3-win` / `rpcs3-linux` (version and commit from the artifact), no exe change.
+**Real lines on both power play units (2026-11-18):** the exe's update of the game's own roster said "31 teams play the lines": Minnesota's
+announced power play puts Quinn Hughes on both units, so `real_line_up` dropped the group, and the dealt one (the game's own template) had
+Faber on both, which the builder's rule refused for the whole team. The game's own roster has 64 such repeats, every one across units, never
+twice in one unit: `lines.unit` / `once_per_unit`, `check_lineup(units=True)` for the real lines (NHL and clubs). Disc + patch: 32 NHL teams and
+159 clubs lined, 0 refused; community: the same. `test_real_lines.py::test_real_lines_with_one_defenceman_on_both_power_play_units_are_played`.
 **Patch 0.29 (2026-11-16, in 0.99.0; notes docs/notes/crash-1baf18.md "Lab round 65", "0.29"):** the same tester's career, begun under
 0.27, still froze under 0.28: its season already held the Top Prospects game, and on its day the league runs event 11
 (1.00 `0x29e9a8`), whose run `0x3c0edc` built line-ups for keys -16 / -15 (the team getter `0x1635b4` says -16 = none) and
@@ -266,9 +277,8 @@ has the patch files by hand (`private/tester_careers/2026-11-15-1baf18/handover/
 one more swapped function `func_0029FAE4`), pack `private/packs/portpatch.zip` 0.29, not published (only with 0.99.0).
 **Second build (2026-11-18):** with the server's lines a second build swapped Plzeň's overtime defencemen: `create_national` kept the
 IIHF estimate's own level, the next run read the clamped attributes (`b.quality` from `ratings.level` now;
-`test_pipeline.py::test_an_estimated_player_counts_at_the_level_his_written_ratings_give`). Two tests that count real lines
-(`test_captains` 15 > 20, `test_real_lines` 240 > 300) fail on the pack's offline NHL.com copy of 2026-11-01 against lines of
-2026-11-16 (17 teams miss lined players in it); refresh the pack's `nhl` part before the release.
+`test_pipeline.py::test_an_estimated_player_counts_at_the_level_his_written_ratings_give`). The data pack of 2026-11-18 (073517f)
+refreshed the `nhl` part too; `test_captains` and `test_real_lines` pass with it.
 
 **Version 0.98.3 (2026-11-16, hotfix of 0.98.2 on branch `hotfix-0.98`, released 2026-11-16 with the owner's go-ahead: commit 9f0d76e, tag `v0.98.3`, GitHub release with the exe, the Linux tar.gz and `SHA256SUMS.txt`, pack `portpatch` 0.28 published the same day; it carries 0.98.2; notes docs/notes/crash-1baf18.md, PLAN.md):** a tester's Be a CHL Pro career froze on 28 January of season 3 (`0x1baf18` on 1.01, every save of that season). Stage Z (0.27) leaves the Top Prospects teams out, but the calendar the game makes for a later season (`_GenerateLeagueSchedule` `0x28470c`) still added their game in the pro's draft year (`0x2724dc(mode, 1)`, `0x284258`: round 5, keys from settings 0x39 / 0x3a, which read 0: "Anaheim v Anaheim"). Patch **0.28**: stage Z's second word, `0x28491c` beq -> b (1.01 `0x285a0c`), in `OTHER_INSTRUCTIONS`; `patch101.py` made again; `tools/audit_patch.py` 0 problems on EU 1.00, NA 1.00, 1.01. Players press Patch again (RPCS3 and the port; pack `portpatch` 0.28 goes out with the app; online word "0.28 exact"). The port DLL is built again for 1.0.0, 1.0.1 and 1.0.2 (175 hooks each, the one change is that jump in `func_002857FC`); the merged pack 0.28 was published with it (`portpatch-2947e1728ed0.zip`). A season made before keeps its game (the repaired copy of his save in private/tester_careers was a no-op: patch 0.29 above is the fix). Found by reading the save and the program only (the owner's RPCS3 was off limits); 0.28 itself not played in the lab. Test `test_gamepatch.py::test_a_chl_pros_own_season_calendar_gets_no_top_prospects_game`.
 

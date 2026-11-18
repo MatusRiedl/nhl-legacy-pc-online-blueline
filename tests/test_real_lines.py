@@ -166,3 +166,48 @@ def test_a_team_whose_real_lines_name_nobody_it_has_keeps_its_lines(base_bytes, 
     result = pipeline.build(base_bytes, broken)
     assert result.ok and result.builder.real_lined == []
     assert result.data == plain.data
+
+
+def test_one_player_may_play_in_two_units_of_a_special_team_never_twice_in_one():
+    assert (lines.unit('pp1ld'), lines.unit('pp4_2c'), lines.unit('pk3_1rd'), lines.unit('ot_3lw')) == \
+        ('pp1', 'pp4_2', 'pk3_1', 'ot_3')
+    assert (lines.unit('l2rw'), lines.unit('l3ld'), lines.unit('g2'), lines.unit('s4'), lines.unit('x1')) == \
+        ('l', 'l', 'g', 's', 'x')
+    assert lines.once_per_unit({'pp1ld': 7, 'pp2ld': 7, 'pp1c': 8})
+    assert not lines.once_per_unit({'pp1ld': 7, 'pp1rd': 7})
+    assert not lines.once_per_unit({'l1ld': 7, 'l2ld': 7})
+
+
+def _holders(R, team):
+    """{slot name: player row} of `team`'s lines in the roster `R`."""
+    got = {}
+    for e in range(R.U.cur_rec):
+        if R.U.get(e, 'BSXd') == team:
+            for name, tag in schema.SLOT_TAG.items():
+                if R.U.get(e, tag):
+                    got[name] = R.p_by_id.get(R.link_to_pid.get(R.U.get(e, 'TWSX')))
+    return got
+
+
+def test_real_lines_with_one_defenceman_on_both_power_play_units_are_played(lined, base_bytes, data, pack):
+    """Minnesota's announced power play of 2026-11-18 put Quinn Hughes on both units, as the game's own roster does 64
+    times (never twice in one unit); the team kept its dealt lines and missed the real ones. They are played now."""
+    with_lines, result = lined
+    b = result.builder
+    rows = {p['nhl_id']: p['row'] for p in b.api if p.get('nhl_id') and p['row'] is not None}
+    R = Roster(result.data)
+    code = next(c for c in sorted(b.real_lined)
+                if rows.get(pack['lines'][c]['slots'].get('pp1ld')) in
+                {_holders(R, L.API_TO_SLOT[c]).get(n) for n in ('pp1ld', 'pp1rd')})
+    twice = copy.deepcopy(pack['lines'])
+    slots = twice[code]['slots']
+    slots['pp2ld'], slots['pp4_2ld'] = slots['pp1ld'], slots['pp4_1ld']
+    again = copy.copy(data)
+    again.real_lines = twice
+    built = pipeline.build(base_bytes, again)
+    assert built.ok, built.problems
+    assert code in built.builder.real_lined, built.builder.real_refused.get(code)
+    got = _holders(Roster(built.data), L.API_TO_SLOT[code])
+    hughes = rows[slots['pp1ld']]
+    assert hughes in {got['pp1ld'], got['pp1rd']} and hughes in {got['pp2ld'], got['pp2rd']}
+    assert pipeline.build(built.data, again).data == built.data

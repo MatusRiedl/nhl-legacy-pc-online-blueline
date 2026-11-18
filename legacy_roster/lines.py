@@ -238,7 +238,30 @@ def lineup(b, team):
     return slots, letters
 
 
-def check_lineup(slots, letters, pos, name, nhl=True, repeats=False, free_letters=False):
+def unit(slot):
+    """The unit of a line slot: 'pp1' for 'pp1ld', 'pk4_2' for 'pk4_2c', 'ot_3' for 'ot_3rd'. The four lines and three
+    pairs are one unit ('l'), and so are the goalies ('g'), the shooters ('s') and the extra attackers ('x')."""
+    if slot[0] in 'lgsx':
+        return slot[0]
+    for spot in ('lw', 'rw', 'ld', 'rd', 'c'):
+        if slot.endswith(spot):
+            return slot[:-len(spot)]
+    return slot
+
+
+def once_per_unit(slots):
+    """Is every player of `slots` ({slot name: player}) at most once in each unit? The game's own roster puts one player
+    in two units of a special team 64 times (a defenceman on both power-play units, as Minnesota's real lines of
+    2026-11-18 put Quinn Hughes) and never twice in one unit."""
+    seen = set()
+    for n, who in slots.items():
+        if (unit(n), who) in seen:
+            return False
+        seen.add((unit(n), who))
+    return True
+
+
+def check_lineup(slots, letters, pos, name, nhl=True, repeats=False, free_letters=False, units=False):
     """What is wrong with a team's lines as plain sentences ([] when the game can play them).
 
     `slots` {slot name: player}, `letters` {player: 'C' | 'A'}, `pos` {player on the team: 'C' 'L' 'R' 'D' 'G'},
@@ -250,10 +273,11 @@ def check_lineup(slots, letters, pos, name, nhl=True, repeats=False, free_letter
     penalty kill, overtime, shootout, extra attackers); the four lines, three pairs and two goalies still need 20
     different players, the game dresses 20.
     `free_letters`: the player's own lines may wear any letters (none, all captains, a goalie's: lab round 55 played
-    them); only a letter on someone who is not on the team is refused. The automatic lines keep the usual rules."""
+    them); only a letter on someone who is not on the team is refused. The automatic lines keep the usual rules.
+    `units`: the real lines may use one player in two units of a special team, never twice in one unit (`once_per_unit`)."""
     problems = []
     for group, names in GROUPS:
-        seen = {}
+        seen, where = {}, set()
         for slot in names:
             who = slots.get(slot)
             if who is None:
@@ -263,10 +287,12 @@ def check_lineup(slots, letters, pos, name, nhl=True, repeats=False, free_letter
             elif (pos[who] == 'G') != (slot in ('g1', 'g2')):
                 problems.append(f"{name[who]} is a goalie: he can only play in goal." if pos[who] == 'G' else
                                 f"{slot_label(slot)}: only a goalie can play in goal.")
-            elif who in seen and not (repeats and group not in ('Lines', 'Goalies')):
+            elif who in seen and not (repeats and group not in ('Lines', 'Goalies')) and \
+                    not (units and (unit(slot), who) not in where):
                 problems.append(f"{name[who]} is twice in {group.lower()} ({slot_label(seen[who])}, {slot_label(slot)}).")
             else:
-                seen[who] = slot
+                seen.setdefault(who, slot)
+                where.add((unit(slot), who))
     if problems:
         return problems
     dressed = {slots[s] for s in schema.EVEN_STRENGTH + schema.GOALIE_SLOTS}
