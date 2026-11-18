@@ -237,7 +237,7 @@ wording (`progress.py`).
 
 ## Current state
 
-**Version 0.99.0 (2026-11-16, not committed, not built, nothing published; plan docs/plans/gentle-soaring-fiddle.md, notes
+**Version 0.99.0 (2026-11-18, committed locally 75304cd / b425e82 / 073517f, nothing published; plan docs/plans/gentle-soaring-fiddle.md, notes
 docs/notes/standalone.md, goal-light.md, PLAN.md top):** Blueline standalone (owner: "the same as with NHL 19 Overtime app"). Setup's
 "Where is your game?" offers Blueline's RPCS3 (recommended), My RPCS3, NHL Legacy Native. Blueline's RPCS3 = our fork's GitHub build
 (`MatusRiedl/rpcs3` branch `blueline`, 0.0.43-20607, commit 2edb9ca5) with the goal light fix, downloaded as pack `rpcs3-win` /
@@ -247,10 +247,12 @@ RPCS3 with `--no-gui --config play/config_<T>.yml` (Game settings + the blit fix
 the player's own RPCS3 too (its files only read). Game settings card (resolution, display, frame limit, VSync, volume) and Controls
 (built-in only: controller or keyboard and mouse, press-a-key). Online: the built-in RPCS3 can copy the other RPCS3's rpcn.yml. Lab:
 ISO boot, portable folder, blit key on 20607, keyboard in menus, the goal lamp lit on our build and dark on RPCS3's own (goal-light.md),
-Set up end to end on an empty folder through the controller without a window + Play at 300 % to the title screen (standalone.md). Not
-lab-confirmed: Set up from the window's button, a match and the lamp on the copy Blueline installed (seen on hand-made lab folders), a
-roster update / game patch / pictures into the built-in RPCS3, Play through the config copy on a player's own RPCS3 (unit tests only),
-online with the built-in RPCS3, Set up on Linux, the mouse on the right stick, four matches in a row at 300 %. The release waits for the owner (exe, Linux, packs:
+Set up end to end on an empty folder through the controller without a window + Play at 300 % to the title screen (standalone.md).
+**Release checks of 2026-11-18 passed** (owner's yes; standalone.md "Release checks"): Set up from the window's button on an empty scratch
+folder + Update with Patch + photos into the built-in copy + Play (32 teams, "Applied patch", a match at 150 %, the lamp lit); Play through
+the config copy on a player's own RPCS3 (main menu + a match at 300 %, its config files unchanged byte for byte); patch 0.29 on the port
+1.0.2 by the window's Patch again over 0.98.3's 0.28 (176 swaps, a new Be a CHL Pro career simmed 19 games to 13 Nov). Not seen: online with the built-in
+RPCS3, Set up on Linux, the mouse on the right stick, four matches in a row at 300 %. The release waits for the owner (packs, push, tag:
 pack and app go out together; it carries 0.98.3, 0.98.2 and patch 0.29).
 **Patch 0.29 (2026-11-16, in 0.99.0; notes docs/notes/crash-1baf18.md "Lab round 65", "0.29"):** the same tester's career, begun under
 0.27, still froze under 0.28: its season already held the Top Prospects game, and on its day the league runs event 11

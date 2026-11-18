@@ -325,7 +325,7 @@ def test_vegas_holds_rights_and_every_other_team_shows_its_own_roster(patch_view
     R = Roster(patch_view)
     office.follow(31)
     o = office.snapshot()
-    assert 'no prospect rights' not in o['groups'][2]['note']
+    assert 'no prospect rights' not in (o['groups'][2]['note'] or '')      # None: prospects listed
     assert o['counts']['farm'] == len(R.team_roster(235))                  # everyone on Henderson
     assert sum(1 for x in R.team_roster(235) if x[1] is not None and R.P.get(x[1], 'WBbd') == 32) >= 9
     for farm, parent in ((234, 30), (235, 31)):
