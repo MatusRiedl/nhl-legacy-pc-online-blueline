@@ -3,7 +3,6 @@
 import { html, cls, useEffect, useRef, useState } from './lib.js';
 import { Button, Toggle, Checkbox, Segmented, Card, PathText, RegionTag, Flag, TextField, Info, Bin } from './ui.js';
 import { call } from './bridge.js';
-import { DiscordButton, KofiButton } from './shell.js';
 import { useSlice } from './store.js';
 import { HostChoice, BuiltinBody, GameCard } from './standalone.js';
 
@@ -132,7 +131,6 @@ export function SetupTab({ s, version }) {
     </div>
     <div class="col">
       <${RosterCard} s=${s}/>
-      <div class="linkrow small"><${DiscordButton} small/><${KofiButton}/></div>
     </div>
   </div>`;
 }

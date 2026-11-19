@@ -6,7 +6,7 @@ from .. import savedata
 SITE = "https://www.puckpeak.com"
 SITE_LABEL = "www.puckpeak.com"
 DISCORD = "https://gg.puckpeak.com"        # the Puck Peak Discord (a redirect)
-KOFI = "https://ko-fi.com/iksperial"       # tips for the development (the button below the Discord one)
+KOFI = "https://ko-fi.com/iksperial"       # tips for the development (the support strip's first button, before Discord; 0.99.1)
 PLAY = "Play NHL Legacy"                   # the header's green button (0.98.1)
 # The other Puck Peak apps, the header's top left (0.98.1, the owner's dock kit; Blueline itself is lit, "You are here"): only these open
 SISTER_APPS = {'overtime': "https://github.com/MatusRiedl/nhl19-pc-online-overtime",

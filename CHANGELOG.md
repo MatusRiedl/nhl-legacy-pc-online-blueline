@@ -3,6 +3,15 @@
 What changed in each version, for players. Developers: details in [AGENTS.md](AGENTS.md)
 ("Current state") and [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## 0.99.1 (2026-11-20)
+
+**Support Blueline from any tab.** A strip under the tabs, on every tab, says "Support the development, updates and
+maintenance." with **Buy me a coffee** first and **Join our Discord** next to it (they were at the bottom of the Setup tab
+only).
+
+Nothing else changes: the same rosters, game patch (0.29) and built-in RPCS3 as 0.99.0. Online, 0.99.1 and 0.99.0 players
+meet as before.
+
 ## 0.99.0 (2026-11-18)
 
 **Play with Blueline: no RPCS3 of your own needed.** In Setup, "Where is your game?" has a new first choice, **Play with

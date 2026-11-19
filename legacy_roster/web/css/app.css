@@ -102,45 +102,37 @@ a:hover { color: #8fdcff; text-decoration: underline; }
 .appdock .tip span { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.45; color: #D5DAE3; }
 /* narrow windows: icons only (the card still names the app) */
 @media (max-width: 1250px) { .appdock .dk { padding: 0 8px; } .appdock .dk b { display: none; } .appdock .dk.here::after { display: none; } }
-.linkrow { display: flex; align-items: stretch; gap: 10px; flex: none; min-width: 0; }
-.linkrow .discord { flex: 1 1 0; width: auto; min-width: 0; }
-.linkrow .kofi { flex: none; width: auto; }
-.linkrow .discord .t { white-space: nowrap; }
-.linkrow { container-type: inline-size; }
-/* Discord and Ko-fi at the bottom of the side column, smaller (the Puck Peak design language: they never push step 1 down) */
-.linkrow.small { margin-top: var(--gap); }
-.linkrow.small .discord { padding: 7px 14px; font-size: 13.5px; border-radius: 8px; }
-.linkrow.small .discord svg { width: 18px; height: 18px; }
-.linkrow.small .kofi { padding: 5px 12px; }
-.linkrow.small .kofi .cup { width: 22px; height: 22px; font-size: 12px; }
-.linkrow.small .kofi .t { font-size: 13px; }
-.linkrow.small .kofi .sub { font-size: 11px; }
-@container (max-width: 470px) { .linkrow .discord .sub { display: none; } }
-.discord { display: flex; align-items: center; gap: 10px; flex: none; width: 100%; padding: 10px 16px; border: 0;
-  border-radius: 10px; background: #5865f2; color: #fff; font: inherit; font-size: 15px; font-weight: 700;
-  letter-spacing: .2px; text-align: left; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.35); }
-.discord svg { width: 22px; height: 22px; fill: currentColor; flex: none; }
-.discord .sub { margin-left: auto; font-size: 12.5px; font-weight: 600; opacity: .85; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.discord:hover { background: #6d79f6; }
-.discord:active { background: #4752c4; }
-.kofi { display: flex; align-items: center; gap: 10px; flex: none; width: 100%; padding: 8px 14px; border-radius: 999px;
-  border: 1px solid rgba(255,244,231,.16); background: linear-gradient(135deg, #9d6535 0%, #bf7a3f 100%); color: #fff;
-  font: inherit; text-align: left; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,.35);
-  transition: transform .16s ease, filter .16s ease; }
-.kofi .cup { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 28px; height: 28px;
-  border-radius: 50%; background: rgba(255,248,240,.18); font-size: 15px; line-height: 1;
+/* the support strip: under the tab row, centred, on every tab (0.99.1, as Faceoff 0.30.0): Ko-fi first, then Discord.
+   It sits under the header's tooltips (z-index 4), the Details panel and the modals. */
+.support { position: relative; z-index: 1; flex: none; display: flex; align-items: center; gap: 10px; box-sizing: border-box;
+  width: max-content; max-width: calc(100% - 32px); margin: 0 auto 10px; padding: 4px 4px 4px 14px;
+  border-radius: 999px; border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(13, 29, 51, .88), rgba(8, 18, 31, .92));
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .04); }
+.sup-heart { flex: none; color: var(--accent-hi); font-size: 14px; line-height: 1; text-shadow: 0 0 10px var(--accent-glow); }
+.sup-text { min-width: 0; font-size: 13.5px; line-height: 1.2; color: var(--muted); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.sup-short { display: none; }
+.support .kofi, .support .discord { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 28px;
+  padding: 0 13px 0 10px; border-radius: 999px; color: #fff; font: inherit; font-size: 12.5px; font-weight: 700;
+  letter-spacing: .02em; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+  transition: transform .16s var(--ease), filter .16s, background .16s; }
+.support .kofi { padding-left: 5px; border: 1px solid rgba(255, 244, 231, .16);
+  background: linear-gradient(135deg, #9d6535 0%, #bf7a3f 100%); }
+.support .kofi .cup { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 20px; height: 20px;
+  border-radius: 50%; background: rgba(255, 248, 240, .18); font-size: 11.5px; line-height: 1;
   font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; }
-.kofi .txt { display: flex; flex-direction: column; min-width: 0; }
-.kofi .t { font-size: 15px; font-weight: 700; line-height: 1.1; }
-.kofi .sub { margin-top: 2px; font-size: 12px; line-height: 1.1; color: rgba(255,247,240,.86); }
-.kofi:hover { transform: translateY(-1px); filter: brightness(1.05); }
-.kofi:focus-visible { outline: 2px solid rgba(255,255,255,.8); outline-offset: 2px; }
-.compact .kofi { padding: 5px 12px; }
-.compact .kofi .t { font-size: 13.5px; }
+.support .discord { border: 0; background: #5865f2; }
+.support .discord svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+.support .kofi:hover, .support .discord:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.support .kofi:active, .support .discord:active { transform: translateY(0); filter: brightness(.95); }
+.support .kofi:focus-visible, .support .discord:focus-visible { outline: 2px solid rgba(255, 255, 255, .8); outline-offset: 2px; }
+/* short windows (768-line laptops): a step smaller, so the team tabs keep their rows */
+.compact .support { margin-bottom: 6px; padding: 2px 2px 2px 12px; }
+.compact .support .kofi, .compact .support .discord { height: 24px; font-size: 12px; }
+.compact .sup-text { font-size: 12.5px; }
+@media (max-width: 760px) { .sup-long { display: none; } .sup-short { display: inline; } }
 .compact .header { padding: 6px 0 0; }
-.compact .discord { padding: 6px 12px; font-size: 13.5px; }
-.compact .discord svg { width: 18px; height: 18px; }
 .compact .header .brand { gap: 12px; }
 .compact .header .wordmark { font-size: 22px; }
 .compact .header .vsep { height: 22px; }
@@ -156,7 +148,7 @@ a:hover { color: #8fdcff; text-decoration: underline; }
 
 /* --- tabs: [L1] Update | Roster editor [R1] ------------------------------------------------- */
 .tabs { position: relative; z-index: 1; display: flex; justify-content: center; align-items: center; gap: 10px;
-  margin: 6px 0 10px; flex: none; }
+  margin: 6px 0 8px; flex: none; }     /* the support strip follows (0.99.1) */
 .keycap { display: inline-grid; place-items: center; min-width: 30px; height: 20px; padding: 0 6px; border-radius: 6px;
   background: linear-gradient(var(--pick-1), var(--pick-2)); color: var(--pick-text); font-size: 12px; font-weight: 700;
   box-shadow: 0 1px 0 rgba(0,0,0,.5), inset 0 -1px 0 rgba(0,0,0,.15); cursor: pointer; }
@@ -498,7 +490,7 @@ input.field:disabled { color: var(--faint); }
   .step { padding: 5px 9px; }
   .roster { padding: 6px 9px; }
   .helpbar { margin-top: 8px; }
-  .tabs { margin: 4px 0 8px; }
+  .tabs { margin: 4px 0 5px; }
   /* step 2 sits above step 4 in the left column: what to update keeps room for rows */
   .card.patch .sub { display: none; }
   .card.patch .patch-state { margin-top: 0; }

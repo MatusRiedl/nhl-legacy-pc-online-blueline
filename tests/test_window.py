@@ -56,7 +56,7 @@ def test_every_call_of_the_page_is_offered_by_the_api():
     assert called and called <= offered, called - offered
 
 
-def test_the_setup_tabs_discord_button_opens_the_puck_peak_discord():
+def test_the_support_strip_under_the_tabs_opens_ko_fi_then_discord_on_every_tab():
     from legacy_roster.window.api import Api
 
     class Host:
@@ -66,15 +66,23 @@ def test_the_setup_tabs_discord_button_opens_the_puck_peak_discord():
             self.opened.append(url)
 
     host = Host()
-    assert Api(host, None).open_discord() is None
-    assert host.opened == ['https://gg.puckpeak.com']
+    assert Api(host, None).open_kofi() is None and host.opened == ['https://ko-fi.com/iksperial']
+    assert Api(host, None).open_discord() is None and host.opened[-1] == 'https://gg.puckpeak.com'
     with open(os.path.join(WEB, 'js', 'shell.js'), encoding='utf-8') as f:
-        assert "call('open_discord')" in f.read()
-    with open(os.path.join(WEB, 'js', 'update.js'), encoding='utf-8') as f:
-        assert '<${RosterCard} s=${s}/>\n      <div class="linkrow small"><${DiscordButton} small/><${KofiButton}/></div>' in f.read()   # under the rosters, as in Overtime (owner's design kit, 0.98.1); one row with Ko-fi (0.50.4)
-    assert Api(host, None).open_kofi() is None and host.opened[-1] == 'https://ko-fi.com/iksperial'
-    with open(os.path.join(WEB, 'js', 'shell.js'), encoding='utf-8') as f:
-        assert "call('open_kofi')" in f.read()
+        shell = f.read()
+    strip = shell[shell.index('export function SupportStrip'):]
+    strip = strip[:strip.index('\n}\n')]
+    assert 'Support the development, updates and maintenance.' in strip   # Faceoff 0.30.0's words (owner, 0.99.1)
+    assert 0 < strip.index("call('open_kofi')") < strip.index("call('open_discord')")   # Buy me a coffee first, Discord second
+    with open(os.path.join(WEB, 'js', 'main.js'), encoding='utf-8') as f:
+        main = f.read()
+    # once, right under the tab row and outside every pane: in view on every tab
+    assert main.count('<${SupportStrip}/>') == 1
+    assert '<${TabBar} tabs=${TABS} tab=${tab} onTab=${pickTab}/>\n    <${SupportStrip}/>\n    <main class="stage">' in main
+    for name in ('update.js', 'standalone.js', 'online.js'):   # the old row under Setup's rosters is gone
+        with open(os.path.join(WEB, 'js', name), encoding='utf-8') as f:
+            text = f.read()
+        assert 'linkrow' not in text and 'DiscordButton' not in text, name
 
 
 def test_the_pages_server_takes_many_connections_at_once():

@@ -237,6 +237,15 @@ wording (`progress.py`).
 
 ## Current state
 
+**Version 0.99.1 (2026-11-20, owner: "we are doing v0.99.1", the same support strip as Faceoff 0.30.0; window only, no engine,
+pack or server change):** Ko-fi and Discord leave the bottom of Setup's roster column (`linkrow small`, 0.98.1) for one strip under
+the tab row, on every tab (`shell.js` `SupportStrip`, rendered once in `main.js` between `TabBar` and the stage; `.support` in
+`css/app.css`, a step smaller under `.compact`): a heart, "Support the development, updates and maintenance." ("Support the
+development." below 760 px), **Buy me a coffee** first, **Join our Discord** second (api `open_kofi` / `open_discord`, unchanged).
+The tab row's bottom margin gives some of the height back; the team tabs at 940x640 lose about one table row. Test
+`test_window.py::test_the_support_strip_under_the_tabs_opens_ko_fi_then_discord_on_every_tab`. Online is unaffected (the lobby
+matches the patch word, not the app version).
+
 **Version 0.99.0 (2026-11-18, RELEASED the same day with the owner's go-ahead ("release 0.99"): tag `v0.99.0` on 47eb143, built from 6753658 (exe e222863e, Linux d197e37d, Ubuntu / Fedora / Arch PASS), GitHub release with `BluelineLegacy.exe`, the same file as `PuckPeakLegacyUpdater.exe`, the Linux tar.gz and `SHA256SUMS.txt`; packs `portpatch` 0.29 (15:25 UTC) and `rpcs3-win` / `rpcs3-linux` (the 2edb9ca5 build, with RPCS3's start-up box) published the same day; plan docs/plans/gentle-soaring-fiddle.md, notes
 docs/notes/standalone.md, goal-light.md, PLAN.md top):** Blueline standalone (owner: "the same as with NHL 19 Overtime app"). Setup's
 "Where is your game?" offers Blueline's RPCS3 (recommended), My RPCS3, NHL Legacy Native. Blueline's RPCS3 = our fork's GitHub build

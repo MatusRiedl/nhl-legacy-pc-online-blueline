@@ -5,7 +5,7 @@
 import { html, cls, useState, useEffect, useRef } from './lib.js';
 import { connect, call, params } from './bridge.js';
 import { useSlice, useMeta, on } from './store.js';
-import { Backdrop, Header, TabBar, HelpBar, Details, Question } from './shell.js';
+import { Backdrop, Header, TabBar, SupportStrip, HelpBar, Details, Question } from './shell.js';
 import { Button } from './ui.js';
 import { Rail } from './rail.js';
 import { SetupTab, UpdateTab, PatchTab } from './update.js';
@@ -192,6 +192,7 @@ function App() {
     <${Backdrop}/>
     <${Header} meta=${meta} play=${update && update.play}/>
     <${TabBar} tabs=${TABS} tab=${tab} onTab=${pickTab}/>
+    <${SupportStrip}/>
     <main class="stage">
       ${pane('setup', html`<${SetupTab} s=${update} version=${meta.version}/>`)}
       ${pane('update', html`<${UpdateTab} s=${update}/>`)}

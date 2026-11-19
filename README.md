@@ -49,7 +49,8 @@ Questions, news and help: **[gg.puckpeak.com](https://gg.puckpeak.com)**
 3. Press **Play NHL Legacy** at the top right. That is all.
 
 No roster yet? It can start from the game's own. Built for the NHL Legacy community, by [Puck Peak](https://www.puckpeak.com).
-Questions or ideas? Come to our [Discord](https://gg.puckpeak.com) (the **Join our Discord** button at the top of the Setup tab).
+Questions or ideas? Come to our [Discord](https://gg.puckpeak.com) (the **Join our Discord** button under the tabs). Like
+Blueline? **Buy me a coffee** next to it supports the development, updates and maintenance.
 
 <details>
 <summary><b>Everything it does, in detail</b></summary>
