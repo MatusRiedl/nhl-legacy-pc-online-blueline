@@ -86,7 +86,7 @@ Its COORDINATION.md is imported through the git-ignored CLAUDE.md. Never put its
    freely; the player's own RPCS3 is still only read (Play and Online boot it with Blueline's copy of its config).
 6. **No git commit or push, and nothing published, without the owner's explicit go-ahead.**
    The project is public at https://github.com/MatusRiedl/nhl-legacy-pc-online-blueline (0.6.0
-   and 0.7.0 released on 2026-10-04, 0.8.0 on 2026-10-05, 0.8.1 on 2026-10-06, 0.50.0 to 0.50.3 on 2026-10-23, 0.50.4 to 0.51.2 on 2026-10-24, 0.52.0 on 2026-10-25, 0.80.0 and 0.80.1 on 2026-10-27, 0.90.0 on 2026-10-29, 0.91.0 on 2026-10-30, 0.92.0 on 2026-11-01, 0.95.0 and 0.95.1 on 2026-11-03, 0.95.2 on 2026-11-04, 0.96.0 on 2026-11-05, 0.97.0 on 2026-11-09, 0.97.1 on 2026-11-10, 0.98.0 and 0.98.1 on 2026-11-13, 0.98.3 on 2026-11-16 (carrying 0.98.2), 0.99.0 on 2026-11-18, each with the owner's go-ahead). Every further commit,
+   and 0.7.0 released on 2026-10-04, 0.8.0 on 2026-10-05, 0.8.1 on 2026-10-06, 0.50.0 to 0.50.3 on 2026-10-23, 0.50.4 to 0.51.2 on 2026-10-24, 0.52.0 on 2026-10-25, 0.80.0 and 0.80.1 on 2026-10-27, 0.90.0 on 2026-10-29, 0.91.0 on 2026-10-30, 0.92.0 on 2026-11-01, 0.95.0 and 0.95.1 on 2026-11-03, 0.95.2 on 2026-11-04, 0.96.0 on 2026-11-05, 0.97.0 on 2026-11-09, 0.97.1 on 2026-11-10, 0.98.0 and 0.98.1 on 2026-11-13, 0.98.3 on 2026-11-16 (carrying 0.98.2), 0.99.0 on 2026-11-18, 0.99.1 on 2026-11-20, each with the owner's go-ahead). Every further commit,
    push or release needs the go-ahead again. Before pushing, check that no base roster (`work/`),
    picture pack (`private/packs/`, a zip in `legacy_roster/data/`), anything from `private/`, personal path or user name
    goes in, and that `python tools/clean_check.py` finds nothing.
@@ -238,7 +238,10 @@ wording (`progress.py`).
 ## Current state
 
 **Version 0.99.1 (2026-11-20, owner: "we are doing v0.99.1", the same support strip as Faceoff 0.30.0; window only, no engine,
-pack or server change):** Ko-fi and Discord leave the bottom of Setup's roster column (`linkrow small`, 0.98.1) for one strip under
+pack or server change; RELEASED the same day with the owner's go-ahead: tag `v0.99.1` on 183e8eb, built from it (exe 1a5f142a,
+Linux 557e95b9, Ubuntu / Fedora / Arch PASS), GitHub release with `BluelineLegacy.exe`, the same file as `PuckPeakLegacyUpdater.exe`,
+the Linux tar.gz and `SHA256SUMS.txt`; full tests 996 passed; the exe was not started (owner: no windowed smoke test this time); a
+0.99.0 copy's `selfupdate.latest` offers 0.99.1):** Ko-fi and Discord leave the bottom of Setup's roster column (`linkrow small`, 0.98.1) for one strip under
 the tab row, on every tab (`shell.js` `SupportStrip`, rendered once in `main.js` between `TabBar` and the stage; `.support` in
 `css/app.css`, a step smaller under `.compact`): a heart, "Support the development, updates and maintenance." ("Support the
 development." below 760 px), **Buy me a coffee** first, **Join our Discord** second (api `open_kofi` / `open_discord`, unchanged).
