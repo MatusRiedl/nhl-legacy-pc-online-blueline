@@ -92,7 +92,7 @@ Its COORDINATION.md is imported through the git-ignored CLAUDE.md. Never put its
    freely; the player's own RPCS3 is still only read (Play and Online boot it with Blueline's copy of its config).
 6. **No git commit or push, and nothing published, without the owner's explicit go-ahead.**
    The project is public at https://github.com/MatusRiedl/nhl-legacy-pc-online-blueline (0.6.0
-   and 0.7.0 released on 2026-10-04, 0.8.0 on 2026-10-05, 0.8.1 on 2026-10-06, 0.50.0 to 0.50.3 on 2026-10-23, 0.50.4 to 0.51.2 on 2026-10-24, 0.52.0 on 2026-10-25, 0.80.0 and 0.80.1 on 2026-10-27, 0.90.0 on 2026-10-29, 0.91.0 on 2026-10-30, 0.92.0 on 2026-11-01, 0.95.0 and 0.95.1 on 2026-11-03, 0.95.2 on 2026-11-04, 0.96.0 on 2026-11-05, 0.97.0 on 2026-11-09, 0.97.1 on 2026-11-10, 0.98.0 and 0.98.1 on 2026-11-13, 0.98.3 on 2026-11-16 (carrying 0.98.2), 0.99.0 on 2026-11-18, 0.99.1 on 2026-11-20, each with the owner's go-ahead). Every further commit,
+   and 0.7.0 released on 2026-10-04, 0.8.0 on 2026-10-05, 0.8.1 on 2026-10-06, 0.50.0 to 0.50.3 on 2026-10-23, 0.50.4 to 0.51.2 on 2026-10-24, 0.52.0 on 2026-10-25, 0.80.0 and 0.80.1 on 2026-10-27, 0.90.0 on 2026-10-29, 0.91.0 on 2026-10-30, 0.92.0 on 2026-11-01, 0.95.0 and 0.95.1 on 2026-11-03, 0.95.2 on 2026-11-04, 0.96.0 on 2026-11-05, 0.97.0 on 2026-11-09, 0.97.1 on 2026-11-10, 0.98.0 and 0.98.1 on 2026-11-13, 0.98.3 on 2026-11-16 (carrying 0.98.2), 0.99.0 on 2026-11-18, 0.99.1 on 2026-11-20, 1.00.0 on 2026-11-27, each with the owner's go-ahead). Every further commit,
    push or release needs the go-ahead again. Before pushing, check that no base roster (`work/`),
    picture pack (`private/packs/`, a zip in `legacy_roster/data/`), anything from `private/`, personal path or user name
    goes in, and that `python tools/clean_check.py` finds nothing.
@@ -244,7 +244,7 @@ wording (`progress.py`).
 
 ## Current state
 
-**Version 1.00.0 (owner, 2026-11-27: "lets call it v1.00.0", with support for NHL Legacy Native 1.0.3; NOT committed, not released):**
+**Version 1.00.0 (owner, 2026-11-27: "lets call it v1.00.0", with support for NHL Legacy Native 1.0.3; RELEASED the same day with the owner's go-ahead ("push, release"): commit fbd5ea0, tag `v1.00.0`, GitHub release with `BluelineLegacy.exe`, the same file as `PuckPeakLegacyUpdater.exe`, the Linux tar.gz and `SHA256SUMS.txt`; 0.99.1's `selfupdate.latest` offers it; the exe was not started):**
 (1) **Port 1.0.3** (released 2026-11-17, players: Blueline would not patch it; notes docs/notes/native-103.md): the same lift as
 1.0.2 (source diff: pads, d3d12 renderer, version resources), `tools/native_patch/pair.py` gave the `BUILDS` row (stamp 0x6afcdb77,
 image 0x1a634000), `savedata.NATIVE_PATCHED` += it, the DLL built with `--skip-lift` from 1.0.2's 0.29 lift (176 hooks, 1,744 links,
@@ -259,7 +259,7 @@ tests failed offline; the tracked pack now holds NHL.com's rosters of 2026-11-27
 the pack's guard refused it, the old list stays (provider to look at before the next `--refresh nhl`). Full tests on the final tree:
 run 1 (old pack) 4 failed / 1102 passed (the three line tests, and test_app's export-from-a-file, which passes alone); run 2 (new pack)
 1 failed / 1105 passed: `test_leagues` compared NHL names exactly and missed Cam Lund (the save spells him Cameron; first initial +
-last name now); `test_leagues.py` again: 23 passed. Exe built 2026-11-27 (8b915f65...), `clean_check` 0 hits; not started (no window). Linux built on the EU box from the same tree (4e5cafc6..., Ubuntu / Fedora / Arch PASS); `dist/SHA256SUMS.txt` holds all three. Waiting for the owner's final go (commit, tag, release). (2) Jokerit and Jukurit, below as it stood under the number 0.99.2.
+last name now); `test_leagues.py` again: 23 passed. Exe built 2026-11-27 (8b915f65...), `clean_check` 0 hits; not started (no window). Linux built on the EU box from the same tree (4e5cafc6..., Ubuntu / Fedora / Arch PASS); `dist/SHA256SUMS.txt` holds all three. Released 2026-11-27 (above). (2) Jokerit and Jukurit, below as it stood under the number 0.99.2.
 
 **Jokerit and Jukurit (2026-11-26, part of 1.00.0; was numbered 0.99.2; plan docs/plans/greedy-toasting-meadow-of-2e719bf2-7d55-40a4-b16c-22d1003c4aa0.md,
 notes docs/notes/liiga-jokerit-jukurit.md, PLAN.md top):** a tester's ask through the owner: **Jokerit (art 87) and Jukurit (art 903)**
