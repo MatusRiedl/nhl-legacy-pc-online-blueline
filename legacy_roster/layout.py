@@ -57,6 +57,29 @@ SPARE = range(236, 252)           # custom slots switched off in the base: room 
 # free one). A named custom team on every roster, a club of the WHL's B.C. Division on a roster for the patched game
 # (gamepatch.LEAGUE_SLOTS). VEES_RINK: Prince George, whose arena row they copy (ice and boards) and whose jerseys they borrow
 VEES, VEES_RINK = 251, 204
+# Jokerit and Jukurit (owner, 2026-11-26, a tester's ask): the two Liiga clubs the game has no slot for, in the two spare slots
+# below the Vees; clubs of the Liiga on a roster for the patched game (gamepatch.LEAGUE_SLOTS), named custom teams on the
+# unpatched one. Jokerit wears art 87, whose old logos, centre ice, arena, banner and puck are still on the disc
+JOKERIT, JUKURIT = 249, 250
+
+
+class Extra:
+    """A club the data pack lists under its league's `extra` (no slot in the game) that has a custom slot of its own:
+    `league` the data pack's league key, `code` its art code (ttOk RPbr, the data pack's `art`), `city` what is written as
+    its city (as its league's clubs in the data pack: a WHL club's town, a Liiga club's short name), `where` the league the
+    window lists it under, `rink` the club whose arena row it starts on (ice and boards),
+    `arena` (name, city, capacity) of its own building, `logo` a logo link of its own (None: the data pack's)."""
+
+    def __init__(self, league, code, city, where, rink, arena, logo=None):
+        self.league, self.code, self.city, self.where = league, code, city, where
+        self.rink, self.arena, self.logo = rink, arena, logo
+
+
+# 'disc:87': art 87's own logo from the player's disc (art/install.disc_logo), the old jester the tester asked for
+EXTRA_CLUBS = {JOKERIT: Extra('liiga', 'JOK', 'Jokerit', 'Liiga', 80, ("Veikkaus Arena", "Helsinki", 13349), 'disc:87'),
+               JUKURIT: Extra('liiga', 'JUK', 'Jukurit', 'Liiga', 80, ("Let's Go Areena", "Mikkeli", 4200)),
+               VEES: Extra('chl', 'PEN', 'Penticton', 'WHL', VEES_RINK,
+                           ("South Okanagan Events Centre", "Penticton, BC", 4494))}
 # the base roster keeps its NHL "System" prospect pools here (DEL 101-104, Extraliga, National League)
 SYSTEM_POOL_SLOTS = set(range(101, 131))
 # teams whose players hold a contract with the team (owner, 2026-10-22: "this tool is a tool to actually make it happen for
@@ -73,12 +96,16 @@ AHL_PARENT_EXTRA = {234: 30, 235: 31}
 # wish) gives a custom slot a blue square on the ice and the jersey, because the game draws custom slots from the
 # create-a-team files whatever the art id; with 20073 / 20081 and the crests the photos install, both teams show their
 # own crest (docs/notes/lab-round-34.md). Only the team table's artid holds a team's art id.
-OWN_ART = {234: 20073, 235: 20081, VEES: 20085}
+OWN_ART = {234: 20073, 235: 20081, VEES: 20085, JOKERIT: 20086, JUKURIT: 20087}     # Jokerit, Jukurit: logos 85 / 86
 # and on a roster for the patched game (0.50.4, lab round 48): art 900 / 901 as a club of the AHL, the created-team flag off
 # (ttOk BERR `table` 0) and the jersey rows (`stockteamjerseys`) of a donor club, whose files art/clubart.py clones. Lab round
 # 34's blue square was the flag left on, with no rows and no files. CLUB_DONOR: slot -> (the donor's art id, its variants)
-CLUB_ART = {234: 900, 235: 901, VEES: 902}
-CLUB_DONOR = {234: (162, (3, 4)), 235: (141, (0, 1)), VEES: (373, (2, 3))}      # Charlotte's, Utica's, Prince George's
+CLUB_ART = {234: 900, 235: 901, VEES: 902, JOKERIT: 87, JUKURIT: 903}
+# Charlotte's, Utica's, Prince George's, Ilves's (two digits as 87), Providence's (the donor's art id has as many digits)
+CLUB_DONOR = {234: (162, (3, 4)), 235: (141, (0, 1)), VEES: (373, (2, 3)), JOKERIT: (86, (4, 5)), JUKURIT: (150, (2, 3))}
+# club art ids the disc has files of its own for (87: logos, centre ice, arena, banner, puck, goalie helmet): those files stay
+# the disc's, only what it lacks (jerseys, pants, socks, the Select Jerseys pictures) is the donor's (art/clubart.py)
+DISC_ARTS = {87}
 # their jersey colours (table NDEo, team = slot + 1: {(equipment, variant 1 home / 2 away): zones 1-9}; the pieces:
 # custom_kit.PIECES): the community roster's, Coachella's black body and shoulders made this season's navy (equipment 9 zones 1
 # and 5 since 0.31.0: round 34 painted equipment 1, the goalie's catching glove; lab round 37), the crest's colours
@@ -87,13 +114,16 @@ CLUB_DONOR = {234: (162, (3, 4)), 235: (141, (0, 1)), VEES: (373, (2, 3))}      
 _NAVY, _TEAL, _ORANGE, _RED, _WHITE, _NONE = (0, 34, 63), (129, 229, 214), (180, 66, 18), (131, 13, 13), (255,) * 3, (0,) * 3
 _GREY, _GOLD, _INK = (114, 114, 114), (180, 139, 18), (32, 32, 32)
 _VEES_NAVY, _SKY = (12, 30, 65), (166, 210, 240)        # the Vees' crest
+_JOK_RED, _JOK_YELLOW, _BLACK = (206, 17, 38), (252, 181, 20), (16, 16, 16)       # Jokerit's jester
+_JUK_NAVY, _JUK_YELLOW = (0, 45, 98), (255, 205, 0)                                # Jukurit's crest
 # and their two team colours (ttOk primary / secondary; the custom slots hold the placeholder blue / red, which goalie gear
 # and the menus would take)
-OWN_COLOURS = {234: (_NAVY, (200, 16, 46)), 235: ((27, 26, 27), (167, 168, 173)), VEES: (_VEES_NAVY, _SKY)}
+OWN_COLOURS = {234: (_NAVY, (200, 16, 46)), 235: ((27, 26, 27), (167, 168, 173)), VEES: (_VEES_NAVY, _SKY),
+               JOKERIT: (_JOK_RED, _JOK_YELLOW), JUKURIT: (_JUK_NAVY, _JUK_YELLOW)}
 # and their designs (ttOk, custom_kit.DESIGN_FIELDS): the community roster's. The game's own roster has 0 everywhere, and
 # with jerseystyle 0 the game draws a custom team's jersey plain (white in lab round 46, black in the owner's RPCS3)
 OWN_DESIGN = {slot: {'jerseystyle': 1, 'jerseybackhome': 0, 'jerseybackaway': 0, 'pantsstyle': 0, 'sockstyle': 1,
-                     'font': 2} for slot in (234, 235, VEES)}
+                     'font': 2} for slot in (234, 235, VEES, JOKERIT, JUKURIT)}
 OWN_KIT = {
     234: {
         (1, 1): (_NAVY,) * 4 + (_TEAL,) + (_NAVY,) * 3 + (_ORANGE,),
@@ -170,6 +200,28 @@ OWN_KIT = {
 }
 
 
+def _kit(main, trim, pants=None):
+    """A kit in the Vees' pattern: dark at home (variant 1), white away (2), `pants` (default `main`) both ways."""
+    pants, stick = pants or main, ((232, 232, 232), _INK, (18, 103, 140)) + (_NONE,) * 6
+    return {(1, 1): (main,) * 4 + (trim,) + (main,) * 3 + (_WHITE,), (2, 1): (main,) * 4 + (trim,) + (main,) * 3 + (_WHITE,),
+            (3, 1): (main,) * 4 + (trim, _WHITE, main, _WHITE, _WHITE), (4, 1): stick,
+            (5, 1): (main,) * 6 + (trim, main, main), (6, 1): (main, trim, _WHITE) + (_NONE,) * 6,
+            (7, 1): (pants,) * 3 + (_NONE,) * 6, (8, 1): (main, main, _WHITE) + (_NONE,) * 6,
+            (9, 1): (main, _WHITE, trim, _WHITE, main, trim) + (_NONE,) * 3, (10, 1): (_WHITE, trim, main) + (_NONE,) * 6,
+            (11, 1): (main, trim, _WHITE) + (_WHITE,) * 3 + (_NONE,) * 3,
+            (1, 2): (_WHITE, main, _WHITE, _WHITE, trim, _WHITE, _WHITE, _WHITE, main),
+            (2, 2): (_WHITE, main, _WHITE, _WHITE, trim, _WHITE, _WHITE, _WHITE, main),
+            (3, 2): (_WHITE, main, _WHITE, _WHITE, trim, _WHITE, _WHITE, _WHITE, main), (4, 2): stick,
+            (5, 2): (main,) * 6 + (trim, main, main), (6, 2): (_WHITE, main, trim) + (_NONE,) * 6,
+            (7, 2): (pants,) * 3 + (_NONE,) * 6, (8, 2): (_WHITE, _WHITE, main) + (_NONE,) * 6,
+            (9, 2): (_WHITE, main, trim, main, _WHITE, trim) + (_NONE,) * 3, (10, 2): (main, trim, _WHITE) + (_NONE,) * 6,
+            (11, 2): (main, trim, _WHITE) + (_WHITE,) * 3 + (_NONE,) * 3}
+
+
+OWN_KIT[JOKERIT] = _kit(_JOK_RED, _JOK_YELLOW, pants=_BLACK)
+OWN_KIT[JUKURIT] = _kit(_JUK_NAVY, _JUK_YELLOW)
+
+
 def listed(T, slot):
     """Does the unpatched game list this custom slot? Its team lists count the switched-on teams and walk ids 0, 1, 2 ...
     that far (0x12865c, 0x128348; lab round 41), so a team shows only when every slot before it is on. Each slot off on the
@@ -177,10 +229,23 @@ def listed(T, slot):
     return all(T.get(t, 'NYKk') for t in range(slot))
 
 
+def is_extra(T, slot):
+    """Does the team table `T` hold its extra club (EXTRA_CLUBS) in `slot` (its club art id on a roster for the patched game,
+    its create-a-team one otherwise), and not a team of the player's own?"""
+    club = EXTRA_CLUBS.get(slot)
+    return (bool(club and T.get(slot, 'NYKk')) and T.get(slot, 'RPbr') == club.code
+            and T.get(slot, 'artid') in (OWN_ART[slot], CLUB_ART[slot]))
+
+
 def is_vees(T):
-    """Does the team table `T` hold the Penticton Vees in their slot (art id 902 on a roster for the patched game), and not
-    a team of the player's own?"""
-    return bool(T.get(VEES, 'NYKk')) and T.get(VEES, 'RPbr') == 'PEN' and T.get(VEES, 'artid') in (OWN_ART[VEES], CLUB_ART[VEES])
+    """Does the team table `T` hold the Penticton Vees in their slot?"""
+    return is_extra(T, VEES)
+
+
+def extras_in(T):
+    """The slots of EXTRA_CLUBS that hold their club in the team table `T`."""
+    return [slot for slot in sorted(EXTRA_CLUBS) if is_extra(T, slot)]
+
 
 POS_CODE = {'C': 0, 'L': 1, 'R': 2, 'D': 3, 'G': 4}
 POS_CLASS = {0: 'C', 1: 'W', 2: 'W', 3: 'D', 4: 'G'}

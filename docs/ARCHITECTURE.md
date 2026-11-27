@@ -328,8 +328,10 @@ Built by `tools/build_datapack.py`, bundled in the exe, and downloaded fresh fro
 }
 ```
 
-Each league also has `extra`: the clubs its feed lists that have no slot (Jokerit, Ajoie, Penticton
-...), with their players, for a player's own custom team of that name (`clubs.own_teams`).
+Each league also has `extra`: the clubs its feed lists that have no slot (Jokerit, Jukurit, Ajoie, Penticton
+...), with their players, for a player's own custom team of that name (`clubs.own_teams`). Three of them get a spare slot
+of their own from it: the Penticton Vees (251, 0.95.0), Jokerit and Jukurit (249 / 250, 1.00.0): `layout.EXTRA_CLUBS`,
+`pipeline.with_extras`.
 
 ```
 ```

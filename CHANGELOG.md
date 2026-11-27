@@ -3,6 +3,31 @@
 What changed in each version, for players. Developers: details in [AGENTS.md](AGENTS.md)
 ("Current state") and [docs/ROADMAP.md](docs/ROADMAP.md).
 
+## 1.00.0 (2026-11-27)
+
+**NHL Legacy Native 1.0.3.** The game patch (32 teams, the year 2026) now works on the newest version of NHL Legacy Native too.
+Before, Blueline said the patch was not made for this version. On 1.0.3 press **Patch** in the Game patch tab. If you patched an
+older version and then updated NHL Legacy Native to 1.0.3, the game runs without the patch until you open Blueline: the Game patch
+tab says so, press **Patch again**. Do this before you play Season, Be a GM or online. Players on 1.0.0, 1.0.1 and 1.0.2 change
+nothing.
+
+**Jokerit and Jukurit join the Liiga.** The two Finnish clubs the game had no slot for now get two of the spare team slots, with
+this season's players. With the game patch they are listed in the Liiga in Play Now, Roster Management and Select Teams.
+Jokerit wears its old logo, centre ice and arena, which are still on your game disc; both clubs get jerseys painted in their
+colours. Their 64 real games each are in the Calendar tab. The game's own Liiga Season still plays the other 15 clubs (a Season
+with all 17 needs a bigger game patch, which is being studied).
+
+Without the game patch they are custom teams (Custom Team 28 and 29), and a roster from the game's own disc has neither. A team
+of your own named Jokerit or Jukurit keeps its slot and gets the club's players, as before. The two slots held prospect pools
+before, so about 80 more prospects of a full update become free agents (they keep their NHL rights and can be signed). The game
+has room for a fixed number of players, so a full update also leaves about 50 more junior and depth players out (mostly in the
+CHL; every club still dresses a full line-up). A roster already updated by an older version has no room left, so there the
+two clubs' players take the places of free agents nobody needs and of spare CHL juniors (about 50).
+
+The game patch stays 0.29: on RPCS3 and on NHL Legacy Native 1.0.0 to 1.0.2 no Patch again is needed. Jokerit and Jukurit were played
+with the game patch on NHL Legacy Native 1.0.3 (Roster Management, Select Teams, a game, a Season); on RPCS3 and without the game
+patch they are not played yet: tell us how it works.
+
 ## 0.99.1 (2026-11-20)
 
 **Support Blueline from any tab.** A strip under the tabs, on every tab, says "Support the development, updates and

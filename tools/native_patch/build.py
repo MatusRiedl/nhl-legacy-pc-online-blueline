@@ -76,6 +76,16 @@ BUILDS = {
                      ps3_hle_call=0x1451a3040),
         data=dict(vm_base=0x154d0d840, g_vm_ld_gate=0x154e688c0, g_vm_st_gate=0x15718cbb0, g_ww_hi=0x154e6889c,
                   tls_index=0x1598f6cc8)),
+    # 1.0.3 (2026-11-17): the same lift again (only pads, the d3d12 renderer and version info changed), the thread block where
+    # 1.0.2 has it. Found by pair.py from 1.0.2's row: docs/notes/native-103.md.
+    (0x6afcdb77, 0x1a634000): dict(
+        table=0x142e7720, code_end=0x1a62e4c, tramp_off=0x44b0,
+        helpers=dict(vm_read8=0x140010b90, vm_read16=0x144f813e0, vm_read32=0x144f424e0, vm_read64=0x144f46ee0,
+                     vm_write8=0x1443c1190, vm_write16=0x144e2a760, vm_write32=0x144e2a460, vm_write64=0x144c41e40,
+                     ppu_ww_note_st16=0x144f80b40, ps3_indirect_call=0x1443c0eb0, ppu_stdcx64=0x1443c0ae0,
+                     ps3_hle_call=0x1451a4e20),
+        data=dict(vm_base=0x154d0d840, g_vm_ld_gate=0x154e688c0, g_vm_st_gate=0x15718e090, g_ww_hi=0x154e6889c,
+                  tls_index=0x1598f81a8)),
 }
 
 

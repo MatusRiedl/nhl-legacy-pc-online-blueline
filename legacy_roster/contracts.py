@@ -108,7 +108,7 @@ def starter_league(slot):
         return 'NL'
     if slot in L.SHL or slot in L.DEL:
         return 'SHL'
-    if slot in L.LIIGA or slot in L.EXTRALIGA:
+    if slot in L.LIIGA or slot in L.EXTRALIGA or getattr(L.EXTRA_CLUBS.get(slot), 'league', '') == 'liiga':
         return 'LIIGA'
     return 'CHL' if slot in L.CHL or slot == L.VEES else 'OTHER'
 

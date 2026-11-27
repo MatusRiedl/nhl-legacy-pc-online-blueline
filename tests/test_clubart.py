@@ -147,6 +147,141 @@ def test_the_donor_s_textures_are_renamed_to_the_new_art_id_and_keep_their_size(
     assert sorted(extra) == sorted(clubart.extra_paths(900))
 
 
+class FakeDisc:
+    """A disc of `files` {path: bytes} (art/lab.Disc's has / find / render)."""
+
+    def __init__(self, files):
+        self.files = files
+
+    def has(self, inner):
+        return inner in self.files
+
+    def find(self, inner):
+        return self.files.get(inner)
+
+    render = find
+
+
+def test_jokerit_s_art_87_reads_its_own_files_first_and_borrows_only_what_the_disc_lacks():
+    jersey, banner, logo = (looks.JERSEY.format(s=1, a=87, v=4), clubart.EXTRA[0].format(a=87),
+                            "fe/ion/artassets/teamlogos/t87.big")
+    preview = looks.PREVIEW.format(s=1, a=87, v=4)
+    disc = FakeDisc({banner: b'own banner', logo: b'own logo', looks.PREVIEW.format(s=1, a=86, v=4): b'ilves',
+                     "fe/ion/artassets/playerheads/p0_4000/p187.big": b'a face'})
+    alias = clubart.AliasDisc(disc)
+    assert clubart.donor_path(jersey) == (87, 86, looks.JERSEY.format(s=1, a=86, v=4))
+    assert clubart.donor_path("rendering/jersey/texlib_1_870_3.rpsgl") is None
+    assert alias.find(banner) == b'own banner' and alias.find(logo) == b'own logo'          # the disc's own: as they are
+    assert not alias.borrowed(banner) and not alias.borrowed(logo) and alias.borrowed(jersey)
+    assert alias.find(preview) == b'ilves' and alias.has(preview)                            # what it lacks: Ilves'
+    assert alias.find("fe/ion/artassets/playerheads/p0_4000/p187.big") == b'a face'
+    assert clubart.extra_paths(87, alias) == [clubart.NAME.format(a=87, v=v) for v in L.CLUB_DONOR[L.JOKERIT][1]] +         [t.format(a=87) for t in clubart.EXTRA[1:]]                                          # its own banner stays
+    assert len(clubart.extra_paths(87)) == 5 and len(clubart.extra_paths(902, alias)) == 5
+
+
+def test_jokerit_keeps_the_disc_s_menu_logos_on_the_patched_game():
+    class Fake:
+        class T:
+            cur_rec = 252
+            arts = {234: 900, 235: 901, L.JOKERIT: 87, L.JUKURIT: 903, L.VEES: 20085}
+
+            @classmethod
+            def get(cls, slot, field):
+                return cls.arts.get(slot, 0)
+    logos = {20073: ('a', 0), 20081: ('b', 0), 20086: ('disc:87', 0), 20087: ('c', 0), 20085: ('d', 0), 5: ('e', 0)}
+    assert clubart.rekey_logos(Fake, logos) == {900: ('a', 0), 901: ('b', 0), 903: ('c', 0), 20085: ('d', 0), 5: ('e', 0)}
+
+
+def test_a_disc_logo_link_is_read_from_the_disc_into_the_picture_cache_once(monkeypatch):
+    from legacy_roster.art import install
+    jester = Image.new('RGBA', (32, 32), (0, 0, 0, 0))
+    jester.paste((200, 16, 46, 255), (4, 4, 28, 28))
+    asked = []
+
+    class Disc:
+        def __init__(self, path):
+            asked.append(path)
+
+        def logo(self, folder, prefix, art):
+            return b'jester' if (folder, prefix, art) == ('teamlogos', 't', 87) else None
+
+    class Cache:
+        def __init__(self):
+            self.logos = {}
+
+        def logo(self, link):
+            return self.logos.get(link)
+
+        def put_logo(self, link, img):
+            self.logos[link] = img
+
+    class Rpcs3:
+        def game_disc(self, title):
+            return 'disc of ' + title
+
+    monkeypatch.setattr(install, 'Disc', Disc)
+    monkeypatch.setattr(install, 'disc_logo', lambda disc, art: jester if disc.logo('teamlogos', 't', art) else None)
+    cache, said = Cache(), []
+    links = ['disc:87', 'disc:88', 'https://logo/a.png', None]
+    assert install.seed_disc_logos(Rpcs3(), 'BLES01530', links, cache, said.append) == 1
+    assert set(cache.logos) == {'disc:87'} and cache.logos['disc:87'].size == (24, 24)      # trimmed, as every kept logo
+    assert asked == ['disc of BLES01530'] and said == ["Photos and logos: your game disc has no logo of art 88"]
+    assert install.seed_disc_logos(Rpcs3(), 'BLES01530', ['disc:87', 'x'], cache, said.append) == 0 and len(asked) == 1
+    with pytest.raises(install.NoPicture):
+        install._download('disc:87')                    # never downloaded: a link not read from the disc says so
+
+
+def test_a_disc_logo_with_no_readable_disc_is_skipped_with_a_row_and_the_pictures_go_on(monkeypatch):
+    from types import SimpleNamespace
+    from legacy_roster import pipeline
+    from legacy_roster.art import install
+
+    class NoDisc:                       # an export without the game, a save folder
+        def game_disc(self, title):
+            return None
+
+    said = []
+    assert install.seed_disc_logos(NoDisc(), 'BLES01530', ['disc:87'], SimpleNamespace(logo=lambda link: None),
+                                   said.append) == 0
+    assert said == ["Photos and logos: your game disc was not found, so the logos read from it are skipped"]
+
+    class Broken:                       # a disc image that does not open as the game's
+        def game_disc(self, title):
+            return 'broken'
+
+    def refuse(path):
+        raise KeyError('cache.big')
+
+    monkeypatch.setattr(install, 'Disc', refuse)
+    pics = object.__new__(pipeline.Pictures)
+    for host, why in ((NoDisc(), "your game disc was not found"), (Broken(), "not read from your game disc")):
+        pics.rpcs3, pics.title_id = host, 'BLES01530'
+        result = SimpleNamespace(log=[], builder=SimpleNamespace(logos={249: 'disc:87'}))
+        pics.disc_logos(result, {})             # never raises: only Jokerit's logo is missing
+        assert len(result.log) == 1 and result.log[0][1] == "Logo not installed" and why in result.log[0][3]
+
+
+@pytest.mark.skipif(not DISC, reason="needs LEGACY_ROSTER_DISC")
+def test_jokerit_s_own_files_come_from_the_real_disc_and_its_jerseys_from_ilves():
+    from legacy_roster.art import install
+    from legacy_roster.art.lab import Disc
+    disc = Disc(DISC)
+    alias = clubart.AliasDisc(disc)
+    for own in (looks.CENTRE.format(a=87), clubart.EXTRA[0].format(a=87), clubart.EXTRA[2].format(a=87)):
+        assert disc.has(own) and not alias.borrowed(own) and alias.render(own) == disc.render(own), own
+    for variant in L.CLUB_DONOR[L.JOKERIT][1]:
+        new, old = (looks.JERSEY.format(s=1, a=a, v=variant) for a in (87, 86))
+        assert not disc.has(new) and alias.borrowed(new)
+        made, original = rpsgl.Rpsgl(alias.render(new)), rpsgl.Rpsgl(disc.render(old))
+        assert bytes(made.data[made.header:]) == bytes(original.data[original.header:])
+        assert all('87' in name and '86' not in name for name in made.rasters), made.rasters
+    assert [p for p in clubart.extra_paths(87, alias) if not alias.borrowed(p)] == []
+    assert clubart.NAME.format(a=87, v=4) in clubart.extra_paths(87, alias)
+    jester = install.disc_logo(disc, 87)
+    assert jester.mode == 'RGBA' and min(jester.size) >= 64 and jester.getbbox() is not None
+    assert install.disc_logo(disc, 903) is None
+
+
 # --- the looks ----------------------------------------------------------------------------------------------------------
 @pytest.fixture
 def crest(monkeypatch):

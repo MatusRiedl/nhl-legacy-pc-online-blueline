@@ -74,6 +74,13 @@ feed typo that makes an AHL player 15.
 After a refresh: run the tests (they build with the bundled pack) and `tools/capacity.py`, then
 ship it (next section).
 
+**A refresh of any part puts older lines back** (seen 2026-11-26 with `--refresh liiga`): every part not refreshed is rebuilt
+from `tools/cache/`, so `lines` and `club_lines` come back as the maintainer last fetched them, older than the ones in the
+tracked pack (the server's lines job writes newer ones every day; `publish_packs.py` keeps the server's newer lines when it
+sends, but the tracked file stays old). After the refresh, lay the newer ones back from the pack before it (git's copy):
+`tools/lines_job.take_newer(new_pack, old_pack)`, then `tools/lines_job.write_pack(path, pack, keep_prev=False)` (no `.prev`
+file in the repo).
+
 ## The picture packs (downloaded, not inside the exe)
 
 Since 0.32.0 (owner, 2026-10-20) the program carries no pictures. Two packs live in `private/packs/` (never in git) and
@@ -173,7 +180,9 @@ when the pack's layout changes in a way older exes cannot read, raise `PACK_FORM
      - SHL: Björklöven → Karlskrona's slot, Timrå → MODO's;
      - DEL: Frankfurt → Düsseldorf's, Bremerhaven → Hamburg's;
      - AHL: Hamilton → Bridgeport's;
-     - WHL: Penticton has no slot.
+     - WHL: Penticton has no slot of the league; since 0.95.0 the Vees fill the spare slot 251 from the league's `extra`
+       (`layout.EXTRA_CLUBS`), as Jokerit and Jukurit fill 249 / 250 from the Liiga's (1.00.0). A club added there needs its
+       own slot, art, donor and rule 2's word from the owner (docs/notes/liiga-jokerit-jukurit.md).
 5. `layout.NOT_ELIGIBLE`: players born in one country who represent another (they must not be
    picked for their birth country's team).
 6. IIHF: new PDF URLs in `tools/providers/iihf.py` after the World Championships (the event number

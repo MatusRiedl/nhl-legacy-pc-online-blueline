@@ -312,10 +312,10 @@ def verify(built, source, nhl_players=None, rebuilt=(), edited=None, league_move
         return [f"the save cannot be read back: {err}"], {}
     U, P, T = R.U, R.P, R.T
 
-    # hard limits of the game: no new teams, no team changes league. The one exception (owner, 2026-10-19 and 2026-11-02):
-    # Coachella Valley and Henderson are in the AHL's Pacific and the Vees in the WHL's B.C. Division (gamepatch.LEAGUE_SLOTS)
-    # on a roster for the game patch (stage Y) and in the Custom league on any other (the unpatched game lists a created
-    # team under Custom only)
+    # hard limits of the game: no new teams, no team changes league. The one exception (owner, 2026-10-19, 2026-11-02 and
+    # 2026-11-26): Coachella Valley and Henderson are in the AHL's Pacific, the Vees in the WHL's B.C. Division and Jokerit /
+    # Jukurit in the Liiga (gamepatch.LEAGUE_SLOTS) on a roster for the game patch (stage Y) and in the Custom league on any
+    # other (the unpatched game lists a created team under Custom only)
     if T.cur_rec != source.T.cur_rec:
         problems.append(f"team count changed from {source.T.cur_rec} to {T.cur_rec}")
     else:
@@ -326,15 +326,18 @@ def verify(built, source, nhl_players=None, rebuilt=(), edited=None, league_move
                     gamepatch.LEAGUE_SLOTS[t] if farm_patch else gamepatch.CUSTOM_GROUPS):
                 continue
             problems.append(f"{_team(R, t)} changed league")
-    # the art ids Coachella Valley and Henderson get (layout.OWN_ART) belong to them alone: another team with one would
-    # show their logo and jerseys (one the source already had there is not blamed)
+    # the art ids the clubs of the custom slots get (layout.OWN_ART) belong to them alone: another team with one would
+    # show their logo and jerseys (one the source already had there is not blamed). Their club art ids (layout.CLUB_ART:
+    # 900-903, Jokerit's 87) only on a roster for the patched game; 87 is the disc's own art, so a team the source already
+    # gave it (a player's own Jokerit) is not blamed, only the Jokerit of slot 249 is held to it
     for t in range(T.cur_rec):
         art = T.get(t, 'artid')
         if art in L.OWN_ART.values() and L.OWN_ART.get(t) != art and source.T.get(t, 'artid') != art:
             problems.append(f"{_team(R, t)} has art id {art}, which is kept for another team")
-        if art in L.CLUB_ART.values() and (L.CLUB_ART.get(t) != art or not farm_patch):     # 900-902: the patched game only
-            problems.append(f"{_team(R, t)} has art id {art}, which only Coachella Valley / Henderson / the Vees have in the "
-                            "patched game")
+        if (art in L.CLUB_ART.values() and (L.CLUB_ART.get(t) != art or not farm_patch)
+                and not (art in L.DISC_ARTS and source.T.get(t, 'artid') == art and not L.is_extra(T, t))):
+            problems.append(f"{_team(R, t)} has art id {art}, which only Coachella Valley / Henderson / the Vees / Jokerit / "
+                            "Jukurit have in the patched game")
     # an NHL team's farm team (ttOk.ahlaffiliate, slot + 1) is an AHL club of slots 32-61 that serves no other NHL team
     # (the AHL step pairs them by the list's organisations, clubs.pair_farms)
     # (what the source already had is not blamed)

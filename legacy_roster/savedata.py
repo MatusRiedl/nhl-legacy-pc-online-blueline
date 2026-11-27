@@ -407,7 +407,8 @@ NATIVE_MOD = 'Puck Peak'                # our mod: every file the program writes
 NATIVE_USER = '00000001'
 NATIVE_PATCHED = {(0x6ae7cb75, 0x1a657000),     # the builds of NHLLegacy.exe our patch file is made for (exe_id): 1.0.0,
                   (0x6af40f41, 0x1a614000),     # 1.0.1 (0.98.0),
-                  (0x6af8ae19, 0x1a633000)}     # 1.0.2 (0.98.2)
+                  (0x6af8ae19, 0x1a633000),     # 1.0.2 (0.98.2),
+                  (0x6afcdb77, 0x1a634000)}     # 1.0.3 (1.00.0)
 
 
 def read_ini(path):

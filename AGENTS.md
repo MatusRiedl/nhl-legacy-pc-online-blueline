@@ -64,8 +64,14 @@ Its COORDINATION.md is imported through the git-ignored CLAUDE.md. Never put its
    A third exception (owner, 2026-11-02): **the Penticton Vees** in the last custom slot (`layout.VEES` = 251). On a roster
    for the patched game they carry a WHL B.C. Division club's league fields (`gamepatch.LEAGUE_SLOTS`) and art 902; in the
    unpatched game, on RPCS3 or NHL Legacy Native, they are a Custom team (Select Teams calls it Custom Team 30; a roster from the
-   game's own disc gets no Vees there: `pipeline.with_vees(listed=)`, lab round 59). The `whl` calendar table keeps 22 clubs. `verify`
-   allows exactly these three slots. A player's own team in slot 251 keeps it (no Vees then); a prospect pool moves out.
+   game's own disc gets no Vees there: `pipeline.with_vees(listed=)`, lab round 59). The `whl` calendar table keeps 22 clubs. A
+   player's own team in slot 251 keeps it (no Vees then); a prospect pool moves out.
+   A fourth exception (owner, 2026-11-26, a tester's ask; plan approved that day): **Jokerit and Jukurit** in slots 249 / 250
+   (`layout.JOKERIT` / `JUKURIT`; `layout.EXTRA_CLUBS` holds them with the Vees). On a roster for the patched game they carry the
+   Liiga's league fields (`gamepatch.LEAGUE_SLOTS`, `LIIGA`) and art 87 (Jokerit's own, still on the disc: `layout.DISC_ARTS`) / 903;
+   unpatched they are Custom teams, and a roster from the game's own disc gets neither there (`layout.listed`). The `liiga` calendar
+   table keeps its 15 clubs (their 64 games each are in our Calendar tab only). `verify` allows exactly these five slots (234, 235,
+   249, 250, 251). A player's own team in either slot keeps it; a prospect pool moves out.
 3. **Nothing is saved while `verify()` reports a problem that stops the roster loading. The player's own edits are
    free otherwise** (owner, 2026-10-29: "allow everything possible that will not really break the roster from loading").
    What the builder's update steps make is still held to every check (a problem there is our bug); what the player's
@@ -201,6 +207,7 @@ bash packaging/linux/build_in_docker.sh <src.tgz> <out>        # the Linux progr
 | RPCS3 and saves | `savedata.py` (also the game's own folder and disc: `Rpcs3.game_folder`, `game_disc`; the versions EU / NA: `GAMES`, `Rpcs3.games`, `install(title_id=)`) |
 | NHL Legacy Native (the PC port, 0.95.0) | `savedata.Native` (a second host next to `Rpcs3`: `find_rpcs3` picks it from `NHLLauncher.exe` / `NHLLegacy.exe` / their folder; reads `nhl_settings.ini` `[paths]`; `game_folder` = `mods/Puck Peak/USRDIR`, `patchable` True on the exe the patch was built for), `native.py` (`first_in_order`: the mod at the top of `mod_order`, `compose`: `NHLLauncher.exe --compose`, no window, `settle`, `notes`: the Setup tab's lines), `art/install` (a picture list per host: `art/native-<hash>`), `app/update.py` (`hosts`, `switch_host`), `texts.NATIVE_NOTE` / `ONLINE_NATIVE`, `tools/window_shot.py --native`, tests/test_native.py, docs/notes/native-port.md |
 | Team names alone (0.95.0) | `pipeline.apply_names` (a `Builder` with no steps, `portraits.names`, `install.install_names` / `install_menus`: never a roster saved, never a pack read), `UpdateController.apply_names`, the Team names row's button, `cli names apply`, `texts.NAMES_DONE` |
+| Jokerit and Jukurit (1.00.0) | `layout.EXTRA_CLUBS` (`Extra`: league, code, city, where, rink, arena, logo), `is_extra` / `extras_in`, `JOKERIT` / `JUKURIT` 249 / 250, `OWN_ART` 20086 / 20087, `CLUB_ART` 87 / 903, `CLUB_DONOR` Ilves 86 / Providence 150, `DISC_ARTS` {87} (`art/clubart.AliasDisc` reads 87's own files first, borrows only what the disc lacks; `rekey_logos` keeps the disc's t87; `looks.with_club_defaults` keeps its centre ice), logo link `disc:87` (`art/install.seed_disc_logos`, `pipeline.Pictures.disc_logos`), `pipeline.extra_club` / `with_extras` (the Liiga step), `builder.extra_arena`, `gamepatch.LEAGUE_SLOTS`, `contracts.starter_league`, `tools/build_datapack.py` `EXTRA_WIKI` (Jukurit's logo), `app/calendar.py` `Book.extras` / `EXTRA_NOTE`, `editor/model.py` (under `Extra.where` on every roster), `'extra liiga clubs'` experimental, tests/test_extra_clubs.py, docs/notes/liiga-jokerit-jukurit.md |
 | Penticton Vees (0.95.0) | `layout.VEES` / `VEES_RINK` / `is_vees`, `OWN_ART` 20085, `CLUB_ART` 902, `CLUB_DONOR`, `pipeline.with_vees` (switches slot 251 on before the CHL step; `clubs.own_teams` fills it from `chl.whl.extra`, no data pack change), `gamepatch.LEAGUE_SLOTS`, `builder.vees_arena`, `app/calendar.py` `VEES_NOTE` (68 games from the data pack), tests/test_vees.py, docs/notes/lab-round-59.md |
 | Menu art and names (portraits, logos, team names) | `art/` (`loc.py` the game's text file and the Puck Peak texts `PROMO`; `menus.py` the main menu without the dead online entries; `disc.py` the player's own disc, `bigf.py`, `refpack.py`, `dds.py`; photos and logos: `portraits.py` ids in the roster, `images.py` drawing, `install.py` download, write, undo; `lab.py` the one-off art test; `crests.py` Coachella's / Henderson's crests as create-a-team logos 72 / 80), `tools/providers/wiki_logo.py`, `tools/names_report.py` |
 | The window (0.10; nine tabs since 0.50) | `window/` (`main.py` start and fallback, registers the slices `update`, `editor`, `rail`, `lines`, `strategy`, `uniforms`, `calendar`, `office`, `contract`, ...; `host.py` pushes state to the page at most 25 times a second, `api.py` the page's calls (`tab`, `rail_league` / `rail_team` / `rail_step`, `calendar_*`, `office_*`, `contract_*`), `webview2.py`, smallest window 940 x 640), `app/` (controllers holding all state: `update.py`, `editor.py` (also the team list's owner: `follow_with`, `show_tab`, `rail_snapshot`, `team_view`; the six team tabs' controllers are followers that work only while their tab shows), `lines.py`, `strategy.py`, `uniforms.py`, `calendar.py`, `office.py`, `season.py`; `jobs.py`, `settings.py`, `texts.py`, `dataurl.py`), `web/` (`index.html`, `css/` (`teams.css`: the team list, calendar, front office), `js/`: `main.js` (the tabs: Setup, Game patch, Update | Roster, Lines, Strategy, Jerseys & ice, Calendar, Front office; Ctrl+1..9, Ctrl+PgUp/PgDn, Alt+Up/Down), `rail.js` (the team list), `update.js` (`SetupTab`, `UpdateTab`, `PatchTab`), `editor.js` (`RosterTab`, `LinesTab`, `StrategyTab`, `JerseysTab`, `SaveBar`, the pop-up windows), `calendar.js`, `office.js` (`OfficeTab`, `ContractWindow`), `ui.js`, `shell.js`, `bridge.js`, `store.js`, `demo.js`), `editor/card.py` (the player card's checks), `progress.py`. Mockups of new screens: `private/mockup/` (git-ignored; `serve.py --open` serves its files over `web/`) |
@@ -236,6 +243,36 @@ progress messages are shown to players too, and the progress bar recognises them
 wording (`progress.py`).
 
 ## Current state
+
+**Version 1.00.0 (owner, 2026-11-27: "lets call it v1.00.0", with support for NHL Legacy Native 1.0.3; NOT committed, not released):**
+(1) **Port 1.0.3** (released 2026-11-17, players: Blueline would not patch it; notes docs/notes/native-103.md): the same lift as
+1.0.2 (source diff: pads, d3d12 renderer, version resources), `tools/native_patch/pair.py` gave the `BUILDS` row (stamp 0x6afcdb77,
+image 0x1a634000), `savedata.NATIVE_PATCHED` += it, the DLL built with `--skip-lift` from 1.0.2's 0.29 lift (176 hooks, 1,744 links,
+4 data words, only addresses and the sign-in stubs' jumps differ), pack `portpatch` 0.29 with four builds in `private/packs/`
+(sha256 a3654118..., the three older files byte for byte the published ones; **published 2026-11-27 09:12 UTC** with the owner's go,
+before the app: without it 1.00.0 on 1.0.3 would say the pack has no file for it). Test `test_native.py::test_a_port_updated_to_103_under_the_patch_is_patched_again`.
+Played on the 1.0.3 lab copy in lab round 66 (docs/notes/lab-round-66.md: "swapped 176", a patch roster, a game). The data pack
+(published 09:12 UTC) took the server's lines of 26 November while its offline NHL rosters were of 18 November, so three real-lines
+tests failed offline; the tracked pack now holds NHL.com's rosters of 2026-11-27 (806 players) and exactly the server's lines of its
+10:00 UTC run (`take_newer`, DET / UTA taken whole); not published again (the server's own pack differs only in that offline copy).
+`--refresh nhl` also re-fetched `nhl_last`: NHL.com's bios list gave 198 players (1,038 before) although the query asks `limit=-1`;
+the pack's guard refused it, the old list stays (provider to look at before the next `--refresh nhl`). Full tests on the final tree:
+run 1 (old pack) 4 failed / 1102 passed (the three line tests, and test_app's export-from-a-file, which passes alone); run 2 (new pack)
+1 failed / 1105 passed: `test_leagues` compared NHL names exactly and missed Cam Lund (the save spells him Cameron; first initial +
+last name now); `test_leagues.py` again: 23 passed. Exe built 2026-11-27 (8b915f65...), `clean_check` 0 hits; not started (no window). Linux built on the EU box from the same tree (4e5cafc6..., Ubuntu / Fedora / Arch PASS); `dist/SHA256SUMS.txt` holds all three. Waiting for the owner's final go (commit, tag, release). (2) Jokerit and Jukurit, below as it stood under the number 0.99.2.
+
+**Jokerit and Jukurit (2026-11-26, part of 1.00.0; was numbered 0.99.2; plan docs/plans/greedy-toasting-meadow-of-2e719bf2-7d55-40a4-b16c-22d1003c4aa0.md,
+notes docs/notes/liiga-jokerit-jukurit.md, PLAN.md top):** a tester's ask through the owner: **Jokerit (art 87) and Jukurit (art 903)**
+in slots 249 / 250, rule 2's fourth exception. The Vees' recipe made general: `layout.EXTRA_CLUBS` (`Extra`), `pipeline.with_extras`
+in the Liiga step, Liiga league fields on patch rosters (`gamepatch.LEAGUE_SLOTS`), art 87 = the disc's own Jokerit files first
+(`clubart.AliasDisc`; the donor Ilves 86 lends only jerseys and what the disc lacks), logo link `disc:87`, Jukurit's logo from
+Wikipedia (`EXTRA_WIKI`; data pack Liiga refreshed 2026-11-26, its `lines` / `club_lines` laid back to the newer ones with
+`lines_job.take_newer`), the Calendar tab shows their 64 real games each (`app/calendar.py` `Book.extras`, `EXTRA_NOTE`), the
+Roster editor lists them under the Liiga on every roster (as the Vees under the WHL; the plan said patched only). The game's
+Liiga Season keeps 15 (Part B: a patch round, research only). No patch change (0.29). `'extra liiga clubs'` experimental. Lab
+round 66 (port 1.0.3, docs/notes/lab-round-66.md): 17 Liiga clubs in Roster Management and Select Teams, real rosters, own jerseys,
+a game to 11:08 of the first period; it found a re-update bug (a roster fully updated before gave them 7 players: `take_record(room=)`
+for `L.EXTRA_CLUBS` in `clubs.update_league`). Season, same round: a Liiga Season with Ilves simulated to 31 October (15 clubs, standings, Save and Exit), and Jokerit put into a Season by the game's Substitute Team (in place of Kiekko-Espoo, its schedule) simulated to 31 October; no crash. The data pack with Jukurit's logo went up with `portpatch` at 09:12 UTC.
 
 **Version 0.99.1 (2026-11-20, owner: "we are doing v0.99.1", the same support strip as Faceoff 0.30.0; window only, no engine,
 pack or server change; RELEASED the same day with the owner's go-ahead: tag `v0.99.1` on 183e8eb, built from it (exe 1a5f142a,

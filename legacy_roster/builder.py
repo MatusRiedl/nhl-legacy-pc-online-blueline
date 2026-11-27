@@ -178,7 +178,7 @@ AHL_ARENAS = {
     235: ("Lee's Family Forum", "Henderson, NV", 9500),
 }
 AHL_ALONE = {234, 235}      # rows shared with a club or a copy that stays where it was (Colorado's AllState Arena, Seattle's copy)
-VEES_ARENA = ("South Okanagan Events Centre", "Penticton, BC", 4494)
+VEES_ARENA = L.EXTRA_CLUBS[L.VEES].arena
 # their helmets, gloves and goalie gear (Builder.nhl_gear): a coloured part becomes the first colour here, a dark one the
 # second; white and black stay (Utah: black, Seattle: deep sea blue, Vegas: gold and steel grey)
 NHL_GEAR = {22: ((32, 32, 32), (32, 32, 32)), 30: ((0, 35, 63), (0, 35, 63)), 31: ((238, 192, 84), (60, 59, 65))}
@@ -594,11 +594,12 @@ class Builder:
             text = text[:-1]
         self.P.set(prow, field, text)
 
-    def take_record(self, pos, who, target=None, required=True):
+    def take_record(self, pos, who, target=None, required=True, room=None):
         """A player record for someone who is not in the save yet (see donors.py). When none is
-        left: an error, or None if the caller can do without (`required=False`)."""
+        left: an error, or None if the caller can do without (`required=False`). `room` (default: `required`): when none
+        is left, make room for him (make_room) before giving up."""
         prow = self.donors.take(pos, target)
-        if prow is None and required:
+        if prow is None and (required if room is None else room):
             prow = self.make_room(pos, who, target)
         if prow is None:
             if not required:
@@ -660,7 +661,7 @@ class Builder:
             prow = R.p_by_id.get(pid)
             if (prow is None or len(ents) != 1 or goalie(prow) != (pos == 4) or prow in self.created
                     or pid in self.api_pids or pid in self.under_contract or pid in self.attached or pid in RESERVED
-                    or P.get(prow, 'WBbd') or len(self.records_of[self.identity(prow)]) != 1):
+                    or P.get(prow, 'WBbd') or len(self.records_of.get(self.identity(prow), ())) != 1):
                 continue
             team = self.U.get(ents[0], 'BSXd')
             if team in L.CHL and kept[(team, pos == 4)] > (2 if pos == 4 else 18):
@@ -1587,14 +1588,20 @@ class Builder:
             done += bool(self.set_arena(slot, name, city, alone=slot in AHL_ALONE, capacity=capacity))
         return done
 
-    def vees_arena(self):
-        """The Penticton Vees' own arena: a copy of a WHL club's row, for its ice and boards (a custom slot starts on a row
-        of the custom teams'). When the table has no room left they play in that club's arena."""
+    def extra_arena(self, slot):
+        """The own arena of a club of layout.EXTRA_CLUBS: a copy of its league club's row (`rink`), for its ice, boards and
+        building (a custom slot starts on a row of the custom teams'; the Liiga's clubs share one row, whose building is art
+        87, Jokerit's old arena). When the table has no room left it plays in that club's arena."""
         T, A = self.R.T, self.R.f['OEtS']
-        name, city, capacity = VEES_ARENA
-        if A.get(T.get(L.VEES, 'arenaid'), 'arenaname') != name:
-            T.set(L.VEES, 'arenaid', T.get(L.VEES_RINK, 'arenaid'))
-        return self.set_arena(L.VEES, name, city, alone=True, capacity=capacity)
+        club = L.EXTRA_CLUBS[slot]
+        name, city, capacity = club.arena
+        if A.get(T.get(slot, 'arenaid'), 'arenaname') != name:
+            T.set(slot, 'arenaid', T.get(club.rink, 'arenaid'))
+        return self.set_arena(slot, name, city, alone=True, capacity=capacity)
+
+    def vees_arena(self):
+        """The Penticton Vees' own arena (extra_arena)."""
+        return self.extra_arena(L.VEES)
 
     def nhl_identity(self):
         """The arena name of every NHL team (NHL_ARENAS), the city of Utah, Seattle and Vegas (NHL_CITIES) and every NHL

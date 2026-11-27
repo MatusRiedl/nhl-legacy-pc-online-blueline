@@ -1,4 +1,5 @@
-"""Coachella Valley and Henderson with art ids of their own, 900 and 901 (0.50.4; lab round 48, docs/notes/lab-round-48.md).
+"""Coachella Valley and Henderson with art ids of their own, 900 and 901 (0.50.4; lab round 48, docs/notes/lab-round-48.md),
+and the other clubs of layout.EXTRA_CLUBS: the Penticton Vees (902), Jokerit (87) and Jukurit (903).
 
 On a roster for the patched game the two clubs are AHL clubs (gamepatch.league_fit) with art ids like any club's
 (gamepatch.art_fit: the created-team flag off, jersey rows of a donor club). The game then looks for their files under those
@@ -7,6 +8,10 @@ Coachella Valley, Utica's (141) for Henderson (layout.CLUB_DONOR). The donor's f
 header changed to the new one (same digit count, so nothing moves) and handed to the same maker that paints Utah, Seattle and
 Vegas (looks.Maker), which puts the club's colours and crest on it. `AliasDisc` does the reading; `extra_files` copies what
 the maker does not paint (name and number sheets, banner, puck, goalie helmet). Standard library only.
+
+Jokerit's art 87 is on the disc (layout.DISC_ARTS: its old logos, centre ice, arena, banner, puck and goalie helmet, but no
+jerseys): its own files are read as they are, only the ones the disc lacks come from its donor (Ilves, 86), and its menu
+logos stay the disc's.
 """
 import re
 
@@ -26,7 +31,8 @@ def number(art):
 
 
 def donor_path(inner):
-    """(art id, donor art id, donor path) for a path of a file of art 900 / 901, or None for any other path."""
+    """(art id, donor art id, donor path) for a path of a file of an art of CLUB_ART (900 / 901 ...), or None for any other
+    path."""
     for art, (donor, _variants) in DONOR_OF.items():
         if re.search(number(art), inner):
             return art, donor, re.sub(number(art), str(donor), inner)
@@ -46,8 +52,9 @@ def renamed(raw, old, new):
 
 
 class AliasDisc:
-    """The player's disc (art/lab.Disc), with the files of art 900 / 901 read from the donor club's: a 3D texture with its
-    art number changed, a menu picture as it is. Every other file is the disc's own."""
+    """The player's disc (art/lab.Disc), with the files of art 900 / 901 ... read from the donor club's: a 3D texture with its
+    art number changed, a menu picture as it is. Every other file is the disc's own, and so is every file the disc has of
+    an art of layout.DISC_ARTS (87)."""
 
     def __init__(self, disc):
         self.disc = disc.disc if isinstance(disc, AliasDisc) else disc
@@ -55,34 +62,50 @@ class AliasDisc:
     def __getattr__(self, name):
         return getattr(self.disc, name)
 
-    def has(self, inner):
+    def _donor(self, inner):
+        """donor_path(inner), or None when the file is the disc's own (any other path, or an art of DISC_ARTS the disc has
+        this file of)."""
         d = donor_path(inner)
+        if d is not None and d[0] in L.DISC_ARTS and self.disc.has(inner):
+            return None
+        return d
+
+    def borrowed(self, inner):
+        """Is this file read from a donor club's (not the disc's own)?"""
+        return self._donor(inner) is not None
+
+    def has(self, inner):
+        d = self._donor(inner)
         return self.disc.has(d[2] if d else inner)
 
     def find(self, inner):
-        d = donor_path(inner)
+        d = self._donor(inner)
         return self.disc.find(d[2] if d else inner)
 
     def render(self, inner):
-        d = donor_path(inner)
+        d = self._donor(inner)
         if d is None:
             return self.disc.render(inner)
         raw = self.disc.render(d[2])
         return None if raw is None else renamed(raw, d[1], d[0])
 
 
-def extra_paths(art):
+def extra_paths(art, disc=None):
     """The files of art `art` the maker does not paint: the name and number sheets, the banner, the puck and the goalie
-    helmet."""
+    helmet. An art of DISC_ARTS keeps the ones the disc has of its own (`disc`: an AliasDisc; without one, every path)."""
     if art not in DONOR_OF:
         return []
-    return [NAME.format(a=art, v=v) for v in DONOR_OF[art][1]] + [t.format(a=art) for t in EXTRA]
+    paths = [NAME.format(a=art, v=v) for v in DONOR_OF[art][1]] + [t.format(a=art) for t in EXTRA]
+    borrowed = getattr(disc, 'borrowed', None)
+    if art in L.DISC_ARTS and borrowed is not None:
+        paths = [p for p in paths if borrowed(p)]
+    return paths
 
 
 def extra_files(disc, art):
     """{path inside USRDIR: file} of extra_paths(art), copied from the donor club's (`disc`: an AliasDisc)."""
     out = {}
-    for path in extra_paths(art):
+    for path in extra_paths(art, disc):
         raw = disc.render(path)
         if raw is not None:
             out[path] = raw
@@ -90,16 +113,19 @@ def extra_files(disc, art):
 
 
 def slots(R):
-    """[slot] of the teams of roster `R` that hold art 900 / 901 (a roster for the patched game)."""
+    """[slot] of the teams of roster `R` that hold their art of CLUB_ART (900 / 901 ...: a roster for the patched game)."""
     return [slot for slot, art in sorted(L.CLUB_ART.items()) if slot < R.T.cur_rec and R.T.get(slot, 'artid') == art]
 
 
 def rekey_logos(R, logos):
     """The menu logos `logos` ({team art id: (link, colours)}, portraits.plan: made from the roster as built, with the
-    create-a-team art ids) under the art ids the patched roster `R` gives Coachella Valley and Henderson."""
+    create-a-team art ids) under the art ids the patched roster `R` gives Coachella Valley, Henderson and the other clubs of
+    CLUB_ART. An art of DISC_ARTS (Jokerit's 87) keeps the disc's own logos: none is made for it."""
     out = dict(logos)
     for slot in slots(R):
         old = L.OWN_ART[slot]
         if old in out:
-            out[L.CLUB_ART[slot]] = out.pop(old)
+            logo = out.pop(old)
+            if L.CLUB_ART[slot] not in L.DISC_ARTS:
+                out[L.CLUB_ART[slot]] = logo
     return out

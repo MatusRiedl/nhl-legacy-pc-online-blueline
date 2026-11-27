@@ -7,7 +7,8 @@ the game's own, which is 2015-16's) and every club league's own table (schedule.
 for the game patch: schedule.read_ahl). Norway has no table: the data pack's real games are shown. The All-Star game is
 shown on its day and counted for nobody. A save's games are the save's own calendar: the playoffs, the farm league of a
 Be a GM; a save of the unpatched game counts its seasons from 2015 and is shown in this program's seasons
-(app/season.py `offset`).
+(app/season.py `offset`). The clubs of layout.EXTRA_CLUBS (the Penticton Vees, Jokerit, Jukurit) are in no table of the
+game: their real games come from the data pack.
 """
 import calendar
 import datetime
@@ -30,6 +31,17 @@ FARM_NOTE = "On the patched game the AHL's 32 clubs are the NHL teams' farm leag
 NORWAY_NOTE = "The game has no calendar for Norway and Season mode does not offer it: these are the real games."
 VEES_CLUB = "Penticton Vees"        # as the data pack's WHL calendar names them
 VEES_NOTE = "The Vees' real games. They are not in the game's own WHL calendar, so Season mode does not play them."
+EXTRA_NOTE = "{name}'s real games, in this calendar only: the game's {league} Season plays the other {n} clubs."
+NOTES = {L.VEES: VEES_NOTE}
+PART_OF = {label: part for part, label in schedule.LEAGUE_LABELS.items()}       # 'Liiga' -> 'liiga'
+
+
+def extra_name(pack, slot):
+    """The name the data pack's calendar gives the extra club of `slot` (layout.EXTRA_CLUBS): its `full` name."""
+    extra = L.EXTRA_CLUBS[slot]
+    clubs = (((pack or {}).get('leagues') or {}).get(extra.league) or {}).get('extra') or []
+    club = next((c for c in clubs if c.get('art') == extra.code), {})
+    return club.get('full') or (VEES_CLUB if slot == L.VEES else extra.city)
 
 
 def _dated(rows, season):
@@ -47,8 +59,9 @@ class Book:
     """The calendars of one roster (read once per Snapshot): [(date, home, away)] of the NHL's games, the All-Star
     game's [(date, home, away)] and the season they are; `leagues` {part: [(date, home, away)]} of every club league
     (Norway's from the data pack `pack`, a club without a slot by its name), `own` the parts whose table is not this
-    season's (known only with the pack), `farm` True when the AHL is the patch's 32, `vees` the Penticton Vees' real games
-    from the pack, which no table of the game holds ([] without the Vees)."""
+    season's (known only with the pack), `farm` True when the AHL is the patch's 32, `extras` {slot: (part, games)} of the
+    extra clubs the roster holds (layout.EXTRA_CLUBS: the Vees, Jokerit, Jukurit): their real games from the pack, which no
+    table of the game holds (an extra club's slot, the other clubs by name)."""
 
     def __init__(self, R, season_year, pack=None):
         rows = schedule.read(R)
@@ -70,10 +83,18 @@ class Book:
                     self.own.add(part)
         norway = ((pack or {}).get('schedules') or {}).get('norway') or []
         self.leagues['norway'] = [(datetime.date.fromisoformat(d), h, a) for d, h, a in sorted(norway, key=lambda g: g[0])]
-        slot_of = lambda club: L.VEES if club == VEES_CLUB else club
-        self.vees = [(datetime.date.fromisoformat(d), slot_of(h), slot_of(a))
-                     for d, h, a in sorted(real.get('whl') or [], key=lambda g: g[0])
-                     if VEES_CLUB in (h, a)] if L.is_vees(R.T) else []
+        named = {(PART_OF[L.EXTRA_CLUBS[slot].where], extra_name(pack, slot)): slot for slot in L.extras_in(R.T)}
+        self.extras = {}
+        for (part, name), slot in named.items():
+            slot_of = lambda club: named.get((part, club), club)
+            self.extras[slot] = (part, [(datetime.date.fromisoformat(d), slot_of(h), slot_of(a))
+                                        for d, h, a in sorted(real.get(part) or [], key=lambda g: g[0])
+                                        if name in (h, a)])
+
+    def extra(self, team):
+        """(part, games) of an extra club with games in the pack, else None."""
+        part, games = self.extras.get(team, (None, []))
+        return (part, games) if games else None
 
 
 class CalendarController:
@@ -195,8 +216,9 @@ class CalendarController:
         book = self.book()
         if team in L.AHL and book is not None and book.farm:      # Coachella Valley / Henderson on a patch roster
             return 'ahl'
-        if team == L.VEES and book is not None and book.vees:     # their own games, _vees_games
-            return 'whl'
+        extra = book.extra(team) if book is not None else None      # their own games, _extra_games
+        if extra is not None:
+            return extra[0]
         return 'norway' if team in L.NORWAY else None
 
     def league_of(self, team):
@@ -243,11 +265,22 @@ class CalendarController:
                     for d, h, a in book.stars]
         return sorted(out, key=lambda g: (g['date'], g['star'])), False
 
-    def _vees_games(self):
-        """The WHL's games with the Vees' real ones: the only team whose list is not the roster's table."""
-        games = [{'date': d, 'home': h, 'away': a, 'score': None, 'extra': None, 'star': False, 'playoffs': False}
-                 for d, h, a in self.book().vees]
-        return sorted((self._games('whl')[0] or []) + games, key=lambda g: g['date'])
+    def _extra_games(self, team):
+        """The games of an extra club's league with the real ones of every extra club in it: the only teams whose list is
+        not the roster's table."""
+        book = self.book()
+        part = book.extra(team)[0]
+        seen = set()
+        games = []
+        for slot in sorted(book.extras):
+            if book.extras[slot][0] != part:
+                continue
+            for d, h, a in book.extras[slot][1]:
+                if (d, h, a) not in seen:           # a game between two of them is in both lists
+                    seen.add((d, h, a))
+                    games.append({'date': d, 'home': h, 'away': a, 'score': None, 'extra': None, 'star': False,
+                                  'playoffs': False})
+        return sorted((self._games(part)[0] or []) + games, key=lambda g: g['date'])
 
     def _view(self):
         """What the page shows for the team followed, or None: {'team', 'league', 'games', 'mine', 'saved', 'range',
@@ -267,7 +300,9 @@ class CalendarController:
             out['why'] = (f"{snap.team_name(team)} is in no league with a calendar"
                           + (" (on the unpatched game it is a custom team)." if team in L.AHL else "."))
             return out
-        games, saved = (self._vees_games(), False) if team == L.VEES else self._games(part)
+        book = self.book()
+        extra = book is not None and book.extra(team) is not None
+        games, saved = (self._extra_games(team), False) if extra else self._games(part)
         if games is None:
             out['why'] = f"This roster has no {league} calendar."
             return out
@@ -372,8 +407,10 @@ class CalendarController:
             league_note = None
             if saved or book is None:
                 pass
-            elif team == L.VEES:
-                league_note = VEES_NOTE
+            elif book.extra(team) is not None:
+                league_note = NOTES.get(team) or EXTRA_NOTE.format(
+                    name=self._team_view(team)['name'], league=league,
+                    n=len(schedule.LEAGUES.get(part, ('', ()))[1]))
             elif part == 'nhl':
                 if book.season == schedule.GAME_SEASON:
                     league_note = ("This roster has the game's own calendar (2015-16). An update with the calendar on "
@@ -436,8 +473,9 @@ class CalendarController:
                         if isinstance(t, int):
                             out[t] = out.get(t, 0) + 1
             book = self.book()
-            if book is not None and book.vees:
-                out[L.VEES] = len(book.vees)
+            for slot in (book.extras if book is not None else {}):
+                if book.extra(slot) is not None:
+                    out[slot] = len(book.extras[slot][1])
             return {t: {'text': str(n), 'tip': 'games'} for t, n in out.items()}
 
 

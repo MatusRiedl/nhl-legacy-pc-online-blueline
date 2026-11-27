@@ -49,6 +49,7 @@ def test_every_club_has_its_real_name_and_its_listed_players(everything, pack):
     R = Roster(result.data)
     names = lambda rows: {(norm(R.P.get(r, 'firstname')), norm(R.P.get(r, 'lastname'))) for r in rows}
     in_the_nhl = names(r for t in range(32) for r in members(R, t))
+    nhl_initials = {(first[:1], last) for first, last in in_the_nhl}     # the save's spelling: Cameron for Cam Lund
     skipped = {norm(r[2]) for r in result.log if r[1] == 'skipped'}
     fillers = {}
     for r in result.log:
@@ -58,6 +59,8 @@ def test_every_club_has_its_real_name_and_its_listed_players(everything, pack):
     on_some_club = set()
     for team in clubs_of(pack):
         on_some_club |= names(members(R, team['slot']))
+    for slot in L.EXTRA_CLUBS:          # the Vees, Jokerit, Jukurit (Ryan McGregor: Jokerit's in the newer Liiga list, Kladno's
+        on_some_club |= names(members(R, slot))     # in the older Extraliga one; the Liiga step runs first)
     near = lambda last, lasts: any(difflib.SequenceMatcher(None, last, n).ratio() >= 0.8 for n in lasts)
     for team in clubs_of(pack):
         slot = team['slot']
@@ -70,7 +73,8 @@ def test_every_club_has_its_real_name_and_its_listed_players(everything, pack):
         # NHL.com has on an NHL roster, players another league listed first, and players no record
         # was left for; it may hold extra players only to fill its line-up.
         missing = {p for p in listed - on_club if not near(p[1], {last for _, last in on_club})}
-        assert {p for p in missing - in_the_nhl - on_some_club if p[0] + p[1] not in skipped} == set(), team['full']
+        assert {p for p in missing - in_the_nhl - on_some_club if p[0] + p[1] not in skipped
+                and (p[0][:1], p[1]) not in nhl_initials} == set(), team['full']
         filled = {norm(n) for n in fillers.get(team['abbr'], [])}         # whole names: "Ian Luca" Scheerschmidt
         assert not {p for p in on_club - listed if p[0] + p[1] not in filled
                     and not near(p[1], {last for _, last in listed})}, team['full']
@@ -149,7 +153,7 @@ def test_displaced_pools_move_to_spare_custom_slots_and_no_slot_changes_league(e
     pool_names = {src.T.get(t, 'fullname') for t in pool_slots}
     assert pool_slots and not any(pools.is_pool(R, t) for t in rebuilt)  # the clubs have their names back
     assert not any(pools.is_pool(src, t) for t in L.EVENTS)              # "Top Prospects" teams are no pools
-    spare = [t for t in pools.SPARE_SLOTS if R.T.get(t, 'active') and t != L.VEES]
+    spare = [t for t in pools.SPARE_SLOTS if R.T.get(t, 'active') and t not in L.EXTRA_CLUBS]
     assert {R.T.get(t, 'fullname') for t in spare} <= pool_names          # a spare slot takes a pool's name
     before = {src.P.get(r, 'game_id') for t in pool_slots for r in members(src, t)}
     after = {R.P.get(r, 'game_id') for t in spare for r in members(R, t)}
@@ -216,7 +220,7 @@ def test_coachella_valley_and_henderson_get_art_ids_of_their_own(everything, pac
     assert rows[234, 1, 1][0] == (0, 34, 63)                # Coachella's home jersey navy, not black
     for slot, design in L.OWN_DESIGN.items():               # drawn as designed (jerseystyle 1), the community's styles
         assert {k: R.T.get(slot, k) for k in design} == design
-        assert slot == L.VEES or design == {k: src.T.get(slot, k) for k in design}
+        assert slot in L.EXTRA_CLUBS or design == {k: src.T.get(slot, k) for k in design}
 
 
 def test_a_second_run_with_club_leagues_changes_nothing(everything, pack):

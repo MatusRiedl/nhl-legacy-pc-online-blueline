@@ -983,6 +983,12 @@ def club_logos(R, leagues):
         for t in league.get('teams') or []:
             if t.get('logo') and not t.get('own') and R.T.get(t['slot'], 'JkmY') == t.get('full'):
                 out[t['slot']] = t['logo']
+    for slot in L.extras_in(R.T):           # the Vees, Jokerit, Jukurit: the clubs the data pack lists without a slot
+        extra = L.EXTRA_CLUBS[slot]
+        club = next((c for c in ((leagues or {}).get(extra.league) or {}).get('extra') or [] if c.get('art') == extra.code), {})
+        link = extra.logo or club.get('logo')
+        if link:
+            out[slot] = link
     return out
 
 
@@ -1495,7 +1501,7 @@ class Maker:
             out += [p for p in (CENTRE.format(a=look.art),) if self._has(p)]   # the national teams' arenas have none
         if _ice_picture_wanted(look):
             out.append(ICE_PICTURE.format(a=look.art))
-        out += [p for p in clubart.extra_paths(look.art) if self._has(p)]
+        out += [p for p in clubart.extra_paths(look.art, self.disc) if self._has(p)]
         return out
 
     def files(self, look):
@@ -1997,9 +2003,10 @@ def _pack_look(R, slot, team, owners, no_ice):
 
 
 def with_club_defaults(R, slot, e, team, logo_links):
-    """The edits of Coachella Valley / Henderson (art 900 / 901) with what the update does by itself when the player chose
-    nothing: their jerseys made from the colours of the team table and the crest, and a centre ice drawn from the crest.
-    The look pack's kits and centre ice win where it has them."""
+    """The edits of Coachella Valley / Henderson (art 900 / 901) and the other clubs of layout.CLUB_ART with what the update
+    does by itself when the player chose nothing: their jerseys made from the colours of the team table and the crest, and a
+    centre ice drawn from the crest (not for Jokerit's art 87: the disc has its own). The look pack's kits and centre ice win
+    where it has them."""
     kits = team.kits if team is not None and not team.why else {}
     centre = team.centre if team is not None and not team.why else None
     mine, ice = dict(e.get('uniforms') or {}), dict(e.get('ice') or {})
@@ -2014,7 +2021,7 @@ def with_club_defaults(R, slot, e, team, logo_links):
         for variant, _light, _d in team_versions(R, slot):
             if variant not in kits:
                 choice.setdefault(str(variant), 'colours')
-        if not centre:
+        if not centre and L.CLUB_ART.get(slot) not in L.DISC_ARTS:     # Jokerit keeps its old centre ice from the disc
             ice.setdefault('use', 'logo')
     mine['versions'] = choice
     return dict(e, uniforms=mine, ice=ice)

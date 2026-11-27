@@ -23,7 +23,7 @@ Questions, news and help: **[gg.puckpeak.com](https://gg.puckpeak.com)**
 - 🏟 **Today's NHL, in your old game.** Every player on his real team, lines, captains, contracts, draft, ratings.
 - ▶️ **Play with Blueline, nothing else to install.** Pick your game's ISO and Blueline sets up its own RPCS3 for NHL Legacy, with the **goal light** fixed, no endless loading at high resolutions, your **game settings** and **keyboard and mouse** controls on the Setup tab.
 - 🖥 **Or your own RPCS3, or the PC port.** Point it at RPCS3 or at NHL Legacy Native and it works out the rest.
-- 🌍 **The whole hockey world.** National teams plus Liiga, Extraliga, SHL, DEL, National League, AHL and the CHL, with real rosters, and the Penticton Vees in the WHL.
+- 🌍 **The whole hockey world.** National teams plus Liiga, Extraliga, SHL, DEL, National League, AHL and the CHL, with real rosters, Jokerit and Jukurit in the Liiga and the Penticton Vees in the WHL.
 - 📸 **Real faces, real logos, real names.** Today's photos and club logos in the game's menus; Utah, Seattle and Vegas as they should be.
 - 👕 **New jerseys and ice.** The new franchises get their own jerseys, helmets and centre-ice logo, and you can paint your own for any team of any league.
 - 🎮 **Multiplayer (beta).** Make a lobby with your roster, share a six-letter code or pick an open game, press **Ready**: RPCS3 starts on both PCs and goes straight to Select Teams. Europe and US, game 1.00 and update 1.01. Chat with your friend, climb the **ranks** and the public **leaderboard**, see **your stats** and a **box score** for every match ("Show me on the leaderboard" takes your name off), and on Windows see chat and the result card **over the game**.
@@ -64,7 +64,7 @@ Blueline? **Buy me a coffee** next to it supports the development, updates and m
 | Draft | Every player's real draft: year, round, pick and team | NHL.com draft lists since 2005 |
 | Ratings | Current player attributes, in every league | Current ratings for 2026-27 |
 | National teams | Squads refreshed; every empty national team filled (also the ones a community roster left empty) | IIHF 2026 rosters and NHL players by nationality |
-| Liiga | The 15 Finnish clubs with their real 2026-27 rosters, lines and captains | liiga.fi |
+| Liiga | The 15 Finnish clubs with their real 2026-27 rosters, lines and captains, and Jokerit and Jukurit in two spare slots | liiga.fi |
 | Extraliga | The 14 Czech clubs likewise | hokej.cz |
 | SHL | The 14 Swedish clubs | shl.se |
 | DEL | The 14 German clubs | penny-del.org |
@@ -106,10 +106,11 @@ This is new in 0.6.0 and has not been played in the game yet. Tell us how it wor
 
 ## Your own team for a missing club
 
-The game has no place for some real clubs: Jokerit and Jukurit (Liiga), Ajoie and Rapperswil-Jona
-(National League), Penticton (WHL), several Norwegian clubs, and, in the game's own roster,
-Coachella Valley and Henderson (AHL). Make a team in the game yourself, name it after the club
-("Jokerit", "Penticton Vees"), save the roster, then update it: your team gets the club's real
+The game has no place for some real clubs: Ajoie and Rapperswil-Jona (National League), several
+Norwegian clubs, and, in the game's own roster, Coachella Valley and Henderson (AHL). (Jokerit,
+Jukurit and the Penticton Vees have spare slots of their own: see "About the club leagues".)
+Make a team in the game yourself, name it after the club ("Ajoie"), save the roster, then update it:
+your team gets the club's real
 players. It keeps the name, city and logo you gave it, and it stays with the other custom teams
 (for exhibition games), because the game does not let a custom team join a league. Do not rename
 one of the game's own teams instead: the update gives that team its real club back.
@@ -138,15 +139,17 @@ in **Setup**, under **Your game**, pick `NHLLauncher.exe` or `NHLLegacy.exe` (or
   you see them on the next start. Leave it switched on in the launcher. It must stay at the top of the mod list if another
   mod changes the same files; the program puts it there.
 - **The game patch:** press **Patch** in the Game patch tab, as on RPCS3. You get the same game: 32 teams and 84 games in
-  Season and Be a GM, the year 2026, Coachella Valley and Henderson in the AHL, the Vees in the WHL. It adds one small file,
+  Season and Be a GM, the year 2026, Coachella Valley and Henderson in the AHL, the Vees in the WHL, Jokerit and Jukurit in
+  the Liiga. It adds one small file,
   `XINPUT1_4.dll`, next to `NHLLegacy.exe`; the game's own files are not changed. **Unpatch** takes it out. It fits one version
   of the port: if the port gets a new version, the window says so until we have made the patch for it.
-- **Without the patch** Season and Be a GM have 30 teams and the year 2015, and Coachella Valley, Henderson and the Vees are
-  custom teams (Custom Team 13, 14 and 30 in Select Teams; from Starting Lineups on the game uses their names).
+- **Without the patch** Season and Be a GM have 30 teams and the year 2015, and Coachella Valley, Henderson, Jokerit, Jukurit
+  and the Vees are custom teams (Custom Team 13, 14, 28, 29 and 30 in Select Teams; from Starting Lineups on the game uses their
+  names).
 - **Online play** works with the game patch on: open **Play online** as on RPCS3 and type the name you want to play under. You
   play against NHL Legacy Native players and RPCS3 players alike. Everyone in the lobby needs this version of the program.
 - **Which roster:** start from a community roster copied into the port's saves. Without the patch, on a roster from the game's
-  own disc the port's lists cannot reach Coachella Valley, Henderson and the Vees, so they are left out there.
+  own disc the port's lists cannot reach Coachella Valley, Henderson, Jokerit, Jukurit and the Vees, so they are left out there.
 - **Skip the intro:** the port has its own switch in the launcher's settings.
 - **Pictures from RPCS3:** if you installed the port from an RPCS3 folder, its import mod may hold our old pictures and our patched
   game files, which do not fit the port. The Setup tab says so and tells you what to do.
@@ -184,9 +187,7 @@ names then go into both games too.
 **About the club leagues.**
 
 - **The game cannot hold more teams than it has slots.** These clubs are left out:
-  - Liiga: Jokerit and Jukurit;
   - National League: Ajoie and Rapperswil-Jona;
-  - WHL: Penticton;
   - Norway: every club except Stavanger and Vålerenga.
 - **A club new to a league since 2015 takes the slot of one that left,** and keeps the old club's jersey.
   Its logo and its name in the menus are the old club's unless "Team names" is on
@@ -198,14 +199,19 @@ names then go into both games too.
   - the AHL's Hamilton Hammers in Bridgeport's.
 - **Prospect pools.** The community roster uses the European club slots for draft classes and NHL
   prospect pools. When a league gets its real clubs, pool players who are not on a real club move
-  to spare custom teams named after their pool (under CUSTOM). There is room for 16 such teams of
+  to spare custom teams named after their pool (under CUSTOM). There is room for 13 such teams of
   40. The best prospects keep their place; the rest become **free agents**, who keep their NHL
-  rights and can be signed. Since 0.95.0 the last spare team is the **Penticton Vees**, so the 16th pool's
-  players join the other pools.
+  rights and can be signed. The last three spare teams are the **Penticton Vees** (since 0.95.0), **Jokerit** and
+  **Jukurit** (since 1.00.0), so a pool found in one of those slots joins the other pools.
 - **Penticton Vees.** A real WHL club today, the 23rd in a league the game built for 22. With the game patch they
   are in the WHL's lists in Play Now and Roster Management; without it they are the last custom team, Custom Team 30 in Select
   Teams (without the patch a roster from the game's own disc has no Vees: the game's lists cannot reach them). Their 68 real games are in the
   Calendar tab. Season, Be a GM and Be a Pro keep the WHL's 22 clubs, because careers have no place for a 23rd.
+- **Jokerit and Jukurit** (1.00.0). The two Liiga clubs the game has no slot for. With the game patch they are in the Liiga's
+  lists in Play Now, Roster Management and Select Teams; Jokerit wears its old logo, centre ice and arena that are still on your
+  game disc, and both get jerseys painted in their colours. Without the patch they are custom teams (Custom Team 28 and 29),
+  and a roster from the game's own disc has neither. Their 64 real games each are in the Calendar tab; the game's own Liiga
+  Season still plays the other 15 clubs. Not played in the game yet: tell us how it works.
 - **Players who leave a club** become free agents too. Nobody is deleted from the save.
 - **Room for new players is limited.** The save has a fixed number of player records. New players take
   over blank records and those of long-retired, low-rated players (never legends, prospects or free

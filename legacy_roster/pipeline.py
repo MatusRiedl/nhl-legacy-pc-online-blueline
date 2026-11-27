@@ -69,34 +69,45 @@ def with_own_teams(R, league, taken, mirrors):
     return dict(league, teams=list(league['teams']) + own)
 
 
+def extra_club(league, code):
+    """The club with art code `code` among a league's clubs without a slot of their own in the data pack, or None."""
+    return next((c for c in league.get('extra') or [] if c.get('art') == code and c.get('players')), None)
+
+
 def vees_club(league):
     """The Penticton Vees among a league's clubs without a slot of their own in the data pack, or None."""
-    return next((c for c in league.get('extra') or [] if c.get('art') == 'PEN' and c.get('players')), None)
+    return extra_club(league, L.EXTRA_CLUBS[L.VEES].code)
+
+
+def with_extras(R, key, league, taken, mirrors, listed=True):
+    """The league `key` with its clubs of layout.EXTRA_CLUBS in their own slots (the CHL: the Penticton Vees; the Liiga:
+    Jokerit and Jukurit): each club the data pack lists under `extra` goes into `teams`, its slot switched on. A player's own
+    team named after one keeps it (clubs.own_teams), and a slot that already holds something else stays as it is, so the
+    club stays without a slot. A prospect pool is no such thing: a full update fills every spare slot, so a roster updated
+    before has one there; the league step moves it out as it does for a pool in a European club's slot. `listed` False: the
+    game could never list them (layout.listed), a new one stays out, as Coachella Valley and Henderson do on such a roster
+    (usable_clubs)."""
+    T = R.T
+    for slot, extra in sorted(L.EXTRA_CLUBS.items()):
+        club = extra_club(league, extra.code) if extra.league == key else None
+        if club is None or (not L.is_extra(T, slot) and not listed):
+            continue
+        if not L.is_extra(T, slot):
+            busy = T.get(slot, 'NYKk') or any(R.U.get(e, 'BSXd') == slot for e in range(R.U.cur_rec))
+            if ((busy and not pools.is_pool(R, slot)) or slot in taken
+                    or any(c['art'] == extra.code for c in clubs.own_teams(R, league, taken, mirrors))):
+                continue
+            T.set(slot, 'NYKk', 1)
+        taken.add(slot)
+        league = dict(league, teams=list(league['teams']) + [dict(club, slot=slot, short=extra.city)],
+                      left_out=[name for name in league.get('left_out') or [] if name != club['full']],
+                      extra=[c for c in league['extra'] if c is not club])
+    return league
 
 
 def with_vees(R, league, taken, mirrors, listed=True):
-    """The CHL with the Penticton Vees in their own slot (layout.VEES): the club the data pack lists under `extra` goes
-    into `teams`, its slot switched on. A player's own team named after them keeps them (clubs.own_teams), and a slot that
-    already holds something else stays as it is, so the Vees stay a club without a slot. A prospect pool is no such thing:
-    a full update fills all 16 spare slots, so a roster updated before the Vees has one there; the league step moves it
-    out as it does for a pool in a European club's slot. `listed` False: the game could never list them (layout.listed),
-    a new Vees stays out, as Coachella Valley and Henderson do on such a roster (usable_clubs)."""
-    club = vees_club(league)
-    if club is None:
-        return league
-    T = R.T
-    if not L.is_vees(T) and not listed:
-        return league
-    if not L.is_vees(T):
-        busy = T.get(L.VEES, 'NYKk') or any(R.U.get(e, 'BSXd') == L.VEES for e in range(R.U.cur_rec))
-        if ((busy and not pools.is_pool(R, L.VEES)) or L.VEES in taken
-                or any(c['art'] == 'PEN' for c in clubs.own_teams(R, league, taken, mirrors))):
-            return league
-        T.set(L.VEES, 'NYKk', 1)
-    taken.add(L.VEES)
-    return dict(league, teams=list(league['teams']) + [dict(club, slot=L.VEES, short='Penticton')],
-                left_out=[name for name in league.get('left_out') or [] if name != club['full']],
-                extra=[c for c in league['extra'] if c is not club])
+    """The CHL with the Penticton Vees in their own slot (with_extras)."""
+    return with_extras(R, 'chl', league, taken, mirrors, listed)
 
 
 def section_of(row):
@@ -136,13 +147,15 @@ def section_of(row):
 # 'league calendars' (2026-10-22): the real season of the AHL (unpatched game), SHL, Liiga, DEL, Extraliga, National League,
 # OHL, QMJHL and WHL in their own tables (schedule.apply_league). Left the list on 2026-10-23 (lab round 46): Season mode
 # played the roster's own DEL, SHL and OHL tables on the patched game and the AHL's on the unpatched one, game for game.
+# 'extra liiga clubs' (2026-11-26, 1.00.0): Jokerit and Jukurit in custom slots 249 / 250, in the Liiga on the patched game
+# (layout.EXTRA_CLUBS, with_extras); not seen in the game yet.
 EXPERIMENTAL = {'shl', 'del', 'nl', 'norway', 'ahl', 'chl', 'stock', 'positions', 'favourite logos',
                 'free agents', 'goalie gear', 'draft', 'own teams', 'type and face edits',
                 'current ratings', 'team sticks', 'nhl gear', 'puck peak texts', 'hidden menus',
                 'own art ids', 'jerseys every league', 'gear colours', 'farm clubs in the AHL',
                 'custom team kits', 'shared ice', 'picture numbers', 'own pictures on save',
                 'draft classes', 'new player records', 'no press start', 'real lines', 'club art 900',
-                'real captains', 'real equipment', 'new centre ice', 'alternate jerseys'}
+                'real captains', 'real equipment', 'new centre ice', 'alternate jerseys', 'extra liiga clubs'}
 ALL_STEPS = CORE_STEPS      # what build() and update() run when no steps are given
 
 
@@ -165,8 +178,8 @@ def planned(pack):
 def left_out_note(pack, step):
     """A short line naming a league's clubs the game has no team slot for (None when all fit)."""
     league = pack.get('leagues', {}).get(step) or {}
-    vees = vees_club(league)
-    clubs = [name for name in league.get('left_out') or [] if not vees or name != vees['full']]
+    placed = {c['full'] for c in (extra_club(league, x.code) for x in L.EXTRA_CLUBS.values() if x.league == step) if c}
+    clubs = [name for name in league.get('left_out') or [] if name not in placed]
     if not clubs:
         return None
     if len(clubs) <= 3:
@@ -456,11 +469,14 @@ def build(source, data, steps=ALL_STEPS, progress=None, check=True, art_registry
     league_data = {}
     for key in leagues:
         league = usable_clubs(R, data.leagues[key])
-        if key == 'chl':                # the game's own roster keeps 222-233 off: the unpatched lists never reach 251
-            league = with_vees(R, league, taken, copies, listed=game_patch or kind != L.STOCK)
+        # the Vees (CHL), Jokerit and Jukurit (Liiga) in their slots; the game's own roster keeps 222-233 off: the
+        # unpatched lists never reach 249-251
+        league = with_extras(R, key, league, taken, copies, listed=game_patch or kind != L.STOCK)
         league_data[key] = with_own_teams(R, league, taken, copies)
-    if any(t['slot'] == L.VEES and not t.get('own') for t in league_data.get('chl', {}).get('teams', ())):
-        b.vees_arena()
+    extras = {t['slot'] for key in leagues for t in league_data[key]['teams']
+              if t['slot'] in L.EXTRA_CLUBS and not t.get('own')}
+    for slot in sorted(extras, key=lambda slot: (slot != L.VEES, slot)):     # the Vees first: their own row since 0.95.0
+        b.extra_arena(slot)
     if 'ahl' in league_data and league_data['ahl'].get('orgs'):
         # this season's farm pairs before anything counts on them (the NHL step's call-ups, the retiring of old players,
         # the AHL step): with the game's own 2014 pairs the retiring kept a player the AHL step then let go
@@ -514,9 +530,10 @@ def build(source, data, steps=ALL_STEPS, progress=None, check=True, art_registry
         log.section = SECTION_POOLS
         b.pool_released = pools.settle(b, say)
         b.former_photos()               # last season's photos for players no list gave one
-        if not game_patch and L.is_vees(R.T) and not L.listed(R.T, L.VEES):
-            log.append(['ALL', 'summary', "Penticton Vees", "not in the game's team list yet: it shows them once every "
-                        "league is updated", ''])
+        for slot in L.extras_in(R.T) if not game_patch else ():
+            if not L.listed(R.T, slot):
+                log.append(['ALL', 'summary', R.team_name(slot), "not in the game's team list yet: it shows them once "
+                            "every league is updated", ''])
     if NATIONAL in steps:
         log.section = SECTION_NATIONAL
         say("National teams")
@@ -1136,6 +1153,7 @@ class Pictures:
         if not (self.parts - {P.PHOTOS}) and self.own_only and not own and not self.looks_for:
             return None, 0, False       # none of the player's own pictures is in this roster
         try:
+            self.disc_logos(result, logos)
             if self.photos:
                 install.give_back((set(self.moved) | self.claims.contested()) - set(portraits_), say)
             new_ice, own_ice = self.new_centres(result)
@@ -1178,6 +1196,21 @@ class Pictures:
         if skipped:
             note_skipped(result, skipped)
         return art, look_teams, bool(skipped)
+
+    def disc_logos(self, result, logos):
+        """The logos the roster takes from the player's disc ('disc:87', Jokerit's old jester: layout.EXTRA_CLUBS) into the
+        picture cache, where the menu logos, crests and jerseys made after look for them."""
+        from .art import install
+        from .art.photopack import PictureCache
+        links = [link for link, _colours in logos.values()] + list(getattr(result.builder, 'logos', {}).values())
+        if any(str(link).startswith(install.DISC_LOGO) for link in links):
+            def note(text):
+                text = text.removeprefix("Photos and logos: ")
+                result.log.append(['', "Logo not installed", '', text, '', SECTION_PICTURES])
+            try:
+                install.seed_disc_logos(self.rpcs3, self.title_id, links, PictureCache(), say=note)
+            except (OSError, ValueError, KeyError, IndexError, install.ArtError) as err:
+                note(f"not read from your game disc ({err})")   # the logo is skipped later with its reason, the rest goes on
 
     def new_centres(self, result):
         """(the art ids the community centre ice has, the art ids among them whose centre the player chose in Jerseys &

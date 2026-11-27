@@ -197,6 +197,8 @@ def _template_size(template_art):
 def _download(url):
     """A picture from a link; 'file:<path>' is a picture of the player's own (Roster editor)."""
     from PIL import Image
+    if url.startswith(DISC_LOGO):        # put into the picture cache from the disc first (seed_disc_logos)
+        raise NoPicture(f"the logo of art {url[len(DISC_LOGO):]} was not read from your game disc")
     if url.startswith('file:'):
         img = Image.open(url[5:])
     else:
@@ -207,6 +209,48 @@ def _download(url):
 
 def _cacheable(url):
     return not url.startswith(('file:', 'badge:'))        # the player's own pictures are on his PC already
+
+
+# A logo link 'disc:<art>' is the menu logo of art <art> on the player's own disc (layout.EXTRA_CLUBS: Jokerit's old jester,
+# art 87). Nothing is downloaded: seed_disc_logos reads it from the disc into the picture cache before the pictures are made,
+# and every reader of logo links (make_logo, looks.team_logo, crests) finds it there.
+DISC_LOGO = 'disc:'
+
+
+def disc_logo(disc, art):
+    """The menu logo of art `art` on the player's disc (`disc`: lab.Disc) as a picture, or None when the disc has none."""
+    from PIL import Image
+    folder, prefix = LOGO_KINDS[0]
+    raw = disc.logo(folder, prefix, art)
+    if raw is None:
+        return None
+    img = Image.open(io.BytesIO(bigf.ArtFile(raw).image()))
+    img.load()
+    return img.convert('RGBA')
+
+
+def seed_disc_logos(rpcs3, title_id, links, cache, say=print):
+    """Put the logos of the 'disc:<art>' links among `links` into the picture cache `cache` (photopack.PictureCache) from the
+    player's disc, once: then the pictures made after find them as any kept logo. A disc without the file leaves the link
+    out (its logo is skipped with a reason). Returns how many were read."""
+    from . import images
+    wanted = sorted({link for link in links if link and link.startswith(DISC_LOGO) and cache.logo(link) is None})
+    if not wanted:
+        return 0
+    where = rpcs3.game_disc(title_id)
+    if not where:                       # an export without the game, a save folder: those logos are skipped with a reason
+        say("Photos and logos: your game disc was not found, so the logos read from it are skipped")
+        return 0
+    disc = Disc(where)
+    done = 0
+    for link in wanted:
+        img = disc_logo(disc, int(link[len(DISC_LOGO):]))
+        if img is None:
+            say(f"Photos and logos: your game disc has no logo of art {link[len(DISC_LOGO):]}")
+            continue
+        cache.put_logo(link, images._trim(img))
+        done += 1
+    return done
 
 
 class NoPicture(ValueError):

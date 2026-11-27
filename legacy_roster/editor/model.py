@@ -87,8 +87,10 @@ class Snapshot:
         # (`farm_ahl`: unleagued), else under Custom (owner, 2026-10-19)
         self.team_league = {t: 'AHL' if farm_ahl and t in L.AHL else L.LEAGUE_NAMES.get(T.get(t, 'jjMx'), 'Other')
                             for t in range(T.cur_rec)}
-        if L.is_vees(T):     # the Vees under the WHL on every roster (owner, 2026-11-03; the unpatched game calls them Custom)
-            self.team_league[L.VEES] = 'WHL'
+        # the extra clubs under their league on every roster: the Vees under the WHL (owner, 2026-11-03), Jokerit and Jukurit
+        # under the Liiga (the unpatched game calls them Custom)
+        for slot in L.extras_in(T):
+            self.team_league[slot] = L.EXTRA_CLUBS[slot].where
         self.rosters = {}                 # team -> [pid]
         teams_of = {}
         for i in range(U.cur_rec):

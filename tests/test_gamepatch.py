@@ -498,7 +498,7 @@ def test_coachella_and_henderson_are_listed_and_named_in_the_ahl():
         words = {0x1000 + 4 * k: w for k, (w, _) in enumerate(code)}
         for flag, league, named in ((1, 13, 1), (1, 1, 0), (0, 1, 0), (0, 13, 0)):
             assert _gate(words, 0x1000, (0x1000 + 4 * len(code),), {}, {0x110: flag, 0x100: league})[1][3] == named
-    R = SimpleNamespace(T=SimpleNamespace(rows={234: {}, 235: {}, 251: {}}), team_name=str)
+    R = SimpleNamespace(T=SimpleNamespace(rows={234: {}, 235: {}, 249: {}, 250: {}, 251: {}}), team_name=str)
     R.T.get = lambda slot, f: R.T.rows[slot].get(f, dict(zip(gamepatch.LEAGUE_FIELDS, gamepatch.CUSTOM_GROUPS))[f]
                                                  if f in gamepatch.LEAGUE_FIELDS else 1)
     R.T.set = lambda slot, f, value: R.T.rows[slot].__setitem__(f, value)

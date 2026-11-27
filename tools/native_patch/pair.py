@@ -4,7 +4,7 @@
     py -3.13 -B tools/native_patch/pair.py <known NHLLegacy.exe> <new NHLLegacy.exe> [--swap <work>/swap.json] [--every 40]
 
 It works only while the port translated the game the same way (the same function table, the same instructions in every
-lifted function); then only addresses moved. 1.0.1 and 1.0.2 were such builds. It checks:
+lifted function); then only addresses moved. 1.0.1, 1.0.2 and 1.0.3 were such builds. It checks:
 - the new table holds the same guest addresses in the same order;
 - every `--every`-th lifted function and every function in `--swap` (the ones the patch replaces) has the same instructions,
   calls and memory references taken out;

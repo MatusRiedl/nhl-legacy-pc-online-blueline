@@ -204,8 +204,9 @@ def update_league(b, key, league, say):
         if t['slot'] in L.OWN_ART:                  # Coachella Valley, Henderson: art ids and jersey colours of their own
             T.set(t['slot'], 'artid', L.OWN_ART[t['slot']])
             own_kit(R, t['slot'])
-        if t.get('logo'):
-            b.logos[t['slot']] = t['logo']
+        logo = getattr(L.EXTRA_CLUBS.get(t['slot']), 'logo', None) or t.get('logo')     # Jokerit: the disc's own jester
+        if logo:
+            b.logos[t['slot']] = logo
 
     live = b.live_entries()     # pid -> entries that exist right now
     people = creation_order(b, key, league, people, live, est)
@@ -288,8 +289,12 @@ def update_league(b, key, league, say):
                 pos = L.POS_CODE[p['pos']]
             g = kind(group(p['pos']))
             spare = b.donors.left(g) - b.core_reserve[g]
-            # depth players only while records remain beyond what later leagues need for their line-ups
-            row = b.take_record(pos, name, required=False) if not p['depth'] or spare > 0 else None
+            # depth players only while records remain beyond what later leagues need for their line-ups. A club of
+            # layout.EXTRA_CLUBS makes room for its players: a roster a full update made before the club came has no spare
+            # record left, so it would dress its old prospect pool (lab round 66, Jokerit and Jukurit with 7 of their own)
+            extra = target in L.EXTRA_CLUBS
+            row = (b.take_record(pos, name, required=False, room=extra) if not p['depth'] or spare > 0 or extra
+                   else None)
             if row is None:                          # no spare record left for this position
                 b.log.append([p['team'], 'skipped', name, 'no free player record left', p.get('num') or ''])
                 stats['skipped: no free record'] += 1
@@ -506,8 +511,9 @@ def _place_prospects(b, key, slots, leftovers, was_pool, live, stats):
         found.append(((P.get(prow, 'WzKY'), -b.quality.get(pid, 0), pid), pid, 'fa' if pid in fa else 'none', fa.get(pid)))
     joined = set()
     for _, pid, how, x in sorted(found):
-        # not the Vees: their slot is a custom team on every roster the draft reads, and these players are placed for the draft
-        room = [s for s in slots if size[s] < PROSPECT_ROOM and not pools.is_pool(R, s) and s != L.VEES]
+        # not the Vees, Jokerit, Jukurit: their slots are custom teams on every roster the draft reads, and these players are
+        # placed for the draft
+        room = [s for s in slots if size[s] < PROSPECT_ROOM and not pools.is_pool(R, s) and s not in L.EXTRA_CLUBS]
         if not room:
             break
         club = min(room, key=lambda s: (size[s], s))

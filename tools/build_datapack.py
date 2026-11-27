@@ -124,6 +124,11 @@ def file_date(path):
     return f"{datetime.datetime.fromtimestamp(os.path.getmtime(path)):%Y-%m-%d}"
 
 
+# clubs without a slot in the data pack that the program gives a custom slot of its own (layout.EXTRA_CLUBS): their
+# Wikipedia article, for a logo when the feed has none (Jokerit's is the disc's own: 'disc:87' in layout)
+EXTRA_WIKI = {'Jukurit': 'Mikkelin Jukurit'}
+
+
 def wiki_logo_of(title):
     """A club's logo link from Wikipedia, remembered in tools/cache/logos.json (None if none)."""
     cache = os.path.join(CACHE, 'logos.json')
@@ -222,7 +227,9 @@ def build_league(key, conf, refresh, db=None):
             left_out.append(name)
             # no slot in the game: kept for a player's own custom team of that name (clubs.own_teams)
             extra.append({'league_id': league_id, 'full': name, 'short': name, 'abbr': short_code(name),
-                          'art': name[:3].upper(), 'logo': feed_logos.get(name), 'players': plausible(name, clubs[name])})
+                          'art': name[:3].upper(),
+                          'logo': feed_logos.get(name) or (wiki_logo_of(EXTRA_WIKI[name]) if name in EXTRA_WIKI else None),
+                          'players': plausible(name, clubs[name])})
         dates.append(file_date(cache))
     # a picture several players share is a feed's "no photo" placeholder, not a photo
     shared = Counter(p.get('photo') for t in teams for p in t['players'] if p.get('photo'))

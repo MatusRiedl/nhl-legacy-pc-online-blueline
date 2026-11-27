@@ -1057,7 +1057,10 @@ LEAGUE_FIELDS = ('jjMx', 'lBIi', CONFERENCE, DIVISION)
 CUSTOM_GROUPS = (13, 48, 48, 48)
 AHL_PACIFIC = (1, 7, 8, 13)
 WHL_BC = (11, 31, 32, 34)               # a club of the WHL's B.C. Division (Prince George, slot 204)
-LEAGUE_SLOTS = {234: AHL_PACIFIC, 235: AHL_PACIFIC, 251: WHL_BC}        # 251: the Vees (owner, 2026-11-02), in_the_roster
+LIIGA = (3, 16, 16, 16)                 # a club of the Liiga (Tappara, slot 80)
+# 251: the Vees (owner, 2026-11-02); 249 / 250: Jokerit / Jukurit (owner, 2026-11-26); each only while it holds its club
+# (in_the_roster)
+LEAGUE_SLOTS = {234: AHL_PACIFIC, 235: AHL_PACIFIC, 251: WHL_BC, L.JOKERIT: LIIGA, L.JUKURIT: LIIGA}
 
 # Stage Z, Be a CHL Pro (2026-11-04, docs/notes/chl-pro-key-127.md; lab rounds 44 / 59, a tester on NHL Legacy Native). A
 # career's teams get keys 0, 1, 2 ... (0x12d84c), 7 bits, room 128. With 32 NHL + 32 AHL teams a CHL career filled all 128:
@@ -1939,13 +1942,14 @@ def league_of(R, slot):
 
 
 def in_the_roster(R, slots):
-    """`slots` without the Vees' when the roster `R` has someone else there (layout.is_vees)."""
-    return [slot for slot in slots if slot != L.VEES or L.is_vees(R.T)]
+    """`slots` without those of layout.EXTRA_CLUBS (the Vees, Jokerit, Jukurit) where the roster `R` has someone else or
+    nobody (layout.is_extra)."""
+    return [slot for slot in slots if slot not in L.EXTRA_CLUBS or L.is_extra(R.T, slot)]
 
 
 def league_fit(R):
-    """Put Coachella Valley and Henderson in the AHL's Pacific and the Vees in the WHL's B.C. Division (LEAGUE_SLOTS) in the
-    roster `R` (stage Y), in place. Returns how many teams changed."""
+    """Put Coachella Valley and Henderson in the AHL's Pacific, the Vees in the WHL's B.C. Division and Jokerit / Jukurit in the
+    Liiga (LEAGUE_SLOTS) in the roster `R` (stage Y), in place. Returns how many teams changed."""
     changed = 0
     for slot in in_the_roster(R, LEAGUE_SLOTS):
         changed += league_of(R, slot) != LEAGUE_SLOTS[slot]
@@ -1955,7 +1959,7 @@ def league_fit(R):
 
 
 def unleague(R):
-    """Undo league_fit on the roster `R`, in place: Coachella Valley, Henderson and the Vees back in the Custom league, where
+    """Undo league_fit on the roster `R`, in place: Coachella Valley, Henderson, the Vees, Jokerit, Jukurit back in Custom, where
     the builder, the names and the pictures expect them (and the unpatched game lists them). Returns how many teams changed."""
     changed = 0
     for slot in in_the_roster(R, LEAGUE_SLOTS):
@@ -1981,13 +1985,20 @@ ROW_WORD, ROW_DEFAULT, ROW_VARIANT = 'gZuU', 'MSFy', 'TccF'     # wgjx locstring
 ALTERNATE_WORD = 2                          # locstring of an Alternate version (art/looks.py ALTERNATE)
 
 
+def own_rows(R, slot):
+    """The wgjx rows of the club art id of `slot` (layout.CLUB_ART); of an art id the disc has files of its own (layout.DISC_ARTS:
+    87) only those under `slot`, so rows another team of the roster has for it are not counted as the club's."""
+    art = L.CLUB_ART[slot]
+    return [row for row in art_rows(R, art) if art not in L.DISC_ARTS or row[ROW_TEAM] == slot]
+
+
 def _club_rows_missing(R):
     """[(slot, art, row)]: the donor rows art_fit still has to add, in the order it adds them."""
     out = []
     for slot in in_the_roster(R, L.CLUB_ART):
         art = L.CLUB_ART[slot]
         donor, variants = L.CLUB_DONOR[slot]
-        have = {row[ROW_VARIANT] for row in art_rows(R, art)}
+        have = {row[ROW_VARIANT] for row in own_rows(R, slot)}
         out += [(slot, art, row) for row in art_rows(R, donor) if row[ROW_VARIANT] in variants and row[ROW_VARIANT] not in have]
     return out
 
@@ -2024,7 +2035,7 @@ def make_room(R, need, dropped=None):
 
 
 def art_fit(R, dropped=None):
-    """Give Coachella Valley, Henderson and the Vees the art ids of their own (layout.CLUB_ART) in the roster `R` for the patched
+    """Give Coachella Valley, Henderson, the Vees, Jokerit and Jukurit their art ids (layout.CLUB_ART) in the roster `R` for the patched
     game, in place: the created-team flag off and the jersey rows of their donor club (layout.CLUB_DONOR: the donor's rows
     for the versions listed there) under their art id and slot. Their files are art/clubart.py's. When the table has no room
     for those rows, this season's Alternate rows an older update added make it (`make_room`; `dropped` gets them); a roster
@@ -2033,9 +2044,10 @@ def art_fit(R, dropped=None):
     missing = _club_rows_missing(R)
     make_room(R, len(missing), dropped)
     if len(missing) > W.max_rec - W.cur_rec:
+        names = ', '.join(dict.fromkeys(R.team_name(slot) for slot, _, _ in missing))
         raise L.LayoutError(f"This roster's list of jersey versions is full ({W.cur_rec} of {W.max_rec}), so there is no "
-                            "room for Coachella Valley's, Henderson's and the Penticton Vees' jerseys the 32-team game "
-                            "needs. Update another roster, or unpatch the game in Game patch and update this one.")
+                            f"room for the jerseys the 32-team game needs for {names}. Update another roster, or unpatch "
+                            "the game in Game patch and update this one.")
     for slot, art, row in missing:
         W.add_record(dict(row, **{ROW_ART: art, ROW_TEAM: slot}))
         changed += 1
@@ -2050,15 +2062,17 @@ def art_fit(R, dropped=None):
 
 def unart(R):
     """Undo art_fit on the roster `R`, in place: their create-a-team art ids (layout.OWN_ART) and the flag back on, their
-    rows out of wgjx (they were added last). Returns how many teams changed."""
+    rows out of wgjx (they were added last). An art id the disc has files of its own for (layout.DISC_ARTS: Jokerit's 87) is
+    taken back only from its own club, and only its rows under that club's slot go. Returns how many teams changed."""
     changed = 0
     for slot, art in L.CLUB_ART.items():
-        if R.T.get(slot, 'artid') == art:
+        if R.T.get(slot, 'artid') == art and (art not in L.DISC_ARTS or L.is_extra(R.T, slot)):
             R.T.set(slot, 'artid', L.OWN_ART[slot])
             R.T.set(slot, CREATED, 1)
             changed += 1
-    W, arts = R.f['wgjx'], set(L.CLUB_ART.values())
-    gone = [i for i in range(W.cur_rec) if W.get(i, ROW_ART) in arts]
+    W, arts, mine = R.f['wgjx'], set(L.CLUB_ART.values()), {(art, slot) for slot, art in L.CLUB_ART.items()}
+    gone = [i for i in range(W.cur_rec) if W.get(i, ROW_ART) in arts
+            and (W.get(i, ROW_ART) not in L.DISC_ARTS or (W.get(i, ROW_ART), W.get(i, ROW_TEAM)) in mine)]
     if gone:
         tail = [{f: W.get(i, f) for f in W.fields} for i in range(gone[0], W.cur_rec) if i not in gone]
         for i in range(gone[0], W.cur_rec):
@@ -2081,10 +2095,10 @@ def check_art_fit(R):
         if R.T.get(slot, 'artid') != art or R.T.get(slot, CREATED) != 0:
             out.append(f"team slot {slot} ({R.team_name(slot)}) does not have art id {art} as a club")
         mine = sorted((row['TccF'], tuple(sorted(dict(row, **{ROW_ART: 0, ROW_TEAM: 0}).items())))
-                      for row in art_rows(R, art))
+                      for row in own_rows(R, slot))
         theirs = sorted((row['TccF'], tuple(sorted(dict(row, **{ROW_ART: 0, ROW_TEAM: 0}).items())))
                         for row in art_rows(R, donor) if row['TccF'] in variants)
-        if mine != theirs or any(row[ROW_TEAM] != slot for row in art_rows(R, art)):
+        if mine != theirs or any(row[ROW_TEAM] != slot for row in own_rows(R, slot)):
             out.append(f"team slot {slot} ({R.team_name(slot)}): its jersey rows are not the donor club's")
     return out
 

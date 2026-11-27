@@ -67,7 +67,7 @@ map is `tools/club_slots.json`.
 | NHL | 0–31 | **Done**, live on every update | NHL.com API | – |
 | Player ratings | – | **Done** | the current ratings (data pack) | about 4,600 players of every league are rated; everyone else is estimated (`estimate.py`) |
 | National teams | 133–153 | **Done**: squads kept current, every empty one filled (0.5.0: also squads a community roster emptied) | IIHF roster PDFs (20 countries) + NHL.com | A country that cannot dress 2 G + 18 skaters stays empty and is named in the summary |
-| Liiga | 76–90 | **Done** (played in the game 2026-10-03) | liiga.fi feed | 17 clubs, 15 slots: Jokerit and Jukurit left out. Kiekko-Espoo in the Espoo Blues slot (77) |
+| Liiga | 76–90, 249, 250 | **Done** (played in the game 2026-10-03); Jokerit / Jukurit **experimental** (1.00.0; lab round 66: listed, rosters, a game, a Season to 31 October with Ilves and with Jokerit as a substitute) | liiga.fi feed | 17 clubs: 15 in the game's slots, Jokerit (249, art 87) and Jukurit (250, art 903) in spare slots, listed in the Liiga only on the patched game; the game's Liiga Season keeps 15 (their 64 games each in the Calendar tab only). Kiekko-Espoo in the Espoo Blues slot (77) |
 | Extraliga | 105–118 | **Done** (played in the game 2026-10-03) | hokej.cz roster pages | Kladno in Chomutov's slot (107), České Budějovice in Zlín's (118) |
 | SHL | 62–75 | **Experimental** | shl.se site API (Sportality) | 14 clubs, 14 slots. Björklöven in Karlskrona's slot (67), Timrå in MODO's (71) |
 | DEL | 91–104 | **Experimental** | penny-del.org roster pages | 14 clubs, 14 slots. Frankfurt in Düsseldorf's (93), Bremerhaven in Hamburg's (94). Age only: new players get an approximate birthdate |
@@ -172,6 +172,12 @@ Check list for each new league (Customize > Save/Load/Delete > Load > Rosters > 
   absorb many of them. The 16 spare custom slots hold 640 (all used) and 73 become free agents
   (`pools.settle`, best prospects kept).
 - **40 players per team** at most (roster entry ids are team × 40 + slot).
+- **Measured again 2026-11-26** (1.00.0, Jokerit and Jukurit in slots 249 / 250, community base, every league, offline): 0
+  records left; the 16 spare slots hold 13 pools + Jokerit, Jukurit and the Vees (598 pool players; 620 with 0.99.1's code),
+  145 pool players become free agents (66), 344 free agents in all (265); skipped for lack of records: CHL 233 (189), DEL 17
+  (10), National League 8 (8): 51 more in all. Every club still dresses a full line-up. Details: docs/notes/liiga-jokerit-jukurit.md.
+  A re-update of a roster that was already full (lab round 66, 2026-11-27) left the two clubs with 7 of their players; since
+  then their players make room (`Builder.make_room`: free agents nobody needs, spare CHL juniors), Liiga skipped 51 -> 0.
 
 ## Decisions taken (2026-10-03)
 
@@ -354,6 +360,11 @@ fields. That is untested, and `verify` forbids it everywhere except in this test
    Penticton, Coachella and Henderson into custom slots moved into their leagues. Those slots come
    from the 16 spare ones that hold prospect pools today.
 
+Since then the update does this without the test for five clubs, on rosters for the patched game only (rule 2's exceptions):
+Coachella Valley and Henderson (234 / 235, AHL, 0.30.0), the Penticton Vees (251, WHL, 0.95.0), Jokerit and Jukurit (249 / 250,
+Liiga, 1.00.0). The test's own slots above (Jokerit 250, Ajoie 249, Penticton 248) are only the LAB roster's; Ajoie and
+Rapperswil-Jona still wait for it.
+
 ### Draft test (the owner runs this once)
 
 Where must an undrafted prospect be for Be a GM's draft to see him? The game's own roster keeps its future
@@ -466,6 +477,24 @@ What each answer means:
   careers and pictures (as a "Puck Peak" mod) can work; the game patch almost certainly cannot (its code is already
   translated into the program); no online play. Probe, folder map and the planned steps: docs/notes/native-port.md.
 
+
+## Checks of 1.00.0 (2026-11-26; Jokerit and Jukurit, docs/notes/liiga-jokerit-jukurit.md)
+
+In the lab first (lab round 66: the lab RPCS3, a scratch LOCALAPPDATA), then the owner. `'extra liiga clubs'` stays in
+`pipeline.EXPERIMENTAL` until then.
+
+- Patched (0.29), update with names and photos: Play Now's Liiga lists 17 named clubs; Jokerit and Jukurit open in Roster
+  Management and Select Teams; a home game each: Jokerit's jester centre ice, arena and banner from the disc, Jukurit's logo and
+  painted jerseys.
+- A patched Liiga Season with one of the 15: the whole regular season and the first playoff round (the Liiga's fields now also
+  hold Jokerit and Jukurit, so this is the regression that matters most).
+- Unpatch + update: both are Custom Team 28 / 29, the roster loads.
+- NHL Legacy Native, patched: the same lists. **Lab round 66 (2026-11-27, port 1.0.3, docs/notes/lab-round-66.md): passed** for
+  Roster Management and Select Teams (17 Liiga clubs, logos, real rosters), own jerseys and a CPU game Jukurit at Jokerit to 11:08 of
+  the first period. It also found the re-update bug (fixed: `take_record(room=)`). Season: a Liiga Season with Ilves simulated to 31
+  October (15 clubs, standings, Save and Exit) and Jokerit through Substitute Team (Kiekko-Espoo's schedule) to 31 October, no crash.
+  Still open: a Season to the playoffs, Jokerit's ice close up, photos for the newcomers, the unpatched game, RPCS3.
+- Tester's answers (through the owner): do community art files use 87 / 903; what the schedule maker is for.
 
 ## Checks after the tester fixes (2026-10-11)
 - Select Teams: cycle every league (also with the game in Czech) after updating with "Photos, logos and team names".

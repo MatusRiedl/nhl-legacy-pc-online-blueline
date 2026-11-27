@@ -20,10 +20,10 @@ py -3.13 -B tools/native_patch/build.py <port clone> <NHLLegacy.exe> <work folde
 ```
 
 Takes a few minutes. It compares the lift with the raw lift and stops when a word of the patch lands in no replaced function.
-`<work>/portpatch.zip` holds one build's file. The pack players get holds every build (0.98.2: 1.0.0, 1.0.1 and 1.0.2):
+`<work>/portpatch.zip` holds one build's file. The pack players get holds every build (1.00.0: 1.0.0, 1.0.1, 1.0.2 and 1.0.3):
 
 ```
-py -3.13 -B tools/native_patch/build.py --merge <out>/portpatch.zip <work 1.0.0>/portpatch.zip <work 1.0.1>/portpatch.zip <work 1.0.2>/portpatch.zip
+py -3.13 -B tools/native_patch/build.py --merge <out>/portpatch.zip <work 1.0.0>/portpatch.zip <work 1.0.1>/portpatch.zip <work 1.0.2>/portpatch.zip <work 1.0.3>/portpatch.zip
 ```
 
 Its `index.json` lists each file under `builds`. 1.0.0's file also stays at the old top-level names (`stamp`, `image`,
@@ -46,7 +46,7 @@ a new port version means: no patch until this is done, RPCS3 players are not tou
 
 1. New `BUILDS` row: `table` (the `function_table` in `.rdata`: rows of guest address, host function, name), `tramp_off`, and
    the addresses of `helpers` and `data`. None are exported.
-   - **When a known build exists** (1.0.1 by hand on 2026-11-13, 1.0.2 by the tool on 2026-11-15): run
+   - **When a known build exists** (1.0.1 by hand on 2026-11-13, 1.0.2 and 1.0.3 by the tool on 2026-11-15 / 2026-11-27): run
      `py -3.13 -B tools/native_patch/pair.py <known NHLLegacy.exe> <new NHLLegacy.exe> --swap <known work>/swap.json`
      (needs capstone). It finds the table by the old table's first guest addresses, checks the same rows, disassembles every
      40th lifted function and every function the patch replaces in both exes (via the two tables and `.pdata`, with calls and
@@ -54,7 +54,8 @@ a new port version means: no patch until this is done, RPCS3 players are not tou
      thread-block offsets give `tramp_off`; lifted code must move by the same amount) and counts the 79,800,000 clock constant
      (`console_clock`, 5 times). It prints the `BUILDS` row and the `NATIVE_PATCHED` entry, or stops with "Translated again"
      when any of this differs (then do it from nothing). Run 1.0.0 -> 1.0.1 it gives back 1.0.1's row exactly. The lift is the
-     same, so copy the known build's work folder and build with `--skip-lift`. docs/notes/native-101.md, native-102.md.
+     same, so copy the known build's work folder and build with `--skip-lift`. docs/notes/native-101.md, native-102.md,
+     native-103.md.
    - **From nothing**: find a helper by small functions in the raw lift that call one helper only: the call all of those have in
      common in the exe is that helper (`llvm-objdump -d`). Read `data` and `tramp_off` from those helpers' code.
 2. `NATIVE_PATCHED` in `savedata.py`: the new stamp and image.
